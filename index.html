@@ -404,6 +404,14 @@ footer p{font-weight:700;font-size:17px;line-height:1.3;margin-top:30px}
 .tg div{background:#fff;color:#4a62d8;border:1.5px solid #a9b7f2}
 .tg .on{background:#4a62d8;color:#fff;border-color:#4a62d8;outline:none;box-shadow:0 2px 6px rgba(74,98,216,.35)}
 
+.ntf{position:absolute;left:12px;right:12px;top:12px;z-index:60;background:#c9f5df;border-radius:10px;min-height:76px;display:flex;align-items:center;gap:16px;padding:14px 14px 12px 14px;overflow:hidden;box-shadow:0 4px 14px rgba(30,40,80,.15)}
+.ntf span{flex:1;font-size:17px;line-height:1.3;color:#22252a}
+.ntf .ntc{flex:0 0 40px;width:40px;height:40px;border-radius:50%;background:#3fae3a;display:grid;place-items:center}.ntf .ntc svg{width:26px;height:26px}
+.ntf .ntx{flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:#e1262d;display:grid;place-items:center}.ntf .ntx svg{width:18px;height:18px}
+.ntb{position:absolute;left:0;top:0;height:4px;width:100%;background:#7fbf8f;transform-origin:left;animation:ntbar linear forwards}
+@keyframes ntbar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.vb.dis.vbgd{background:#86c779;color:#eaf6e6}
+
 /* ===== mobilní režim ===== */
 body.mob{background:#f5f6fa;overscroll-behavior:none;touch-action:manipulation}
 .mob #app{display:block;height:100%}
@@ -532,7 +540,7 @@ const DNS=['Ne','Po','Út','St','Čt','Pá','So'];
 const MON=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
 const TODAY=16, NOWMIN=13*60, LAST=27;            // simulovaný den testu: po 16. 11. 2026, 13:00; rámec 11 dní
 const OCC={16:[[0,780],[780,870]],17:[[360,1035]],18:[[540,660]],19:[[360,1035]],20:[[840,1440]],21:[[600,690]],23:[[420,540]],25:[[720,960]],27:[[1080,1440]]};
-const POHON=['Běžný (benzín/nafta)','Elektromobil (BEV)','Plug-in hybrid (PHEV)','Hybrid (HEV)','LPG / CNG'];
+const POHON=['Běžný (benzín/nafta)','Elektromobil (BEV)','Plug-in hybrid (PHEV)','Hybrid (HEV)','LPG a CNG'];
 const car0=(spz)=>({n:spz,spz,p:0,inv:false,len:'',w:'',h:'',note:''});
 const vN=(St,i)=>St.cars[i]?St.cars[i].spz:'–';
 const vNm=(St,i)=>St.cars[i]?(St.cars[i].n||St.cars[i].spz):'–';
@@ -591,9 +599,9 @@ function gauge(v,size=48,fs=12){const sw=size/13.7,r=size/2-sw/2-1,c=2*Math.PI*r
  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a9a9a"/><stop offset=".5" stop-color="#f4f4f4"/><stop offset="1" stop-color="#8f8f8f"/></linearGradient></defs><circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="#c6cad6" stroke-width="${sw.toFixed(2)}"/><circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="#4cae38" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-dasharray="${(c*v/100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${cx} ${cx})"/><circle cx="${cx}" cy="${cx}" r="${(r*.85).toFixed(1)}" fill="url(#${id})"/><text x="${cx}" y="${(cx+fs*.35).toFixed(1)}" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="${fs}" letter-spacing="-0.3" fill="#22252a">${v}%</text></svg>`;}
 
 /* ==================== STAV ==================== */
-function fresh(variant){return {scr:'home',menu:false,menuRez:false,sheet:null,dlg:null,toast:null,mode:'single',month:10,day:null,r1:null,r2:null,a:null,b:null,
+function fresh(variant){return {scr:'home',menu:false,menuRez:false,sheet:null,dlg:null,toast:null,ntf:null,mode:'single',month:10,day:null,r1:null,r2:null,a:null,b:null,
  veh:0,ev:false,vehOpen:false,vehDrop:false,tv:0,tev:false,tpl:[{n:'Ranní směna',a:360,b:840},{n:'Odpolední směna',a:840,b:1320}],
- variant:variant||'B',scroll:0,timerEnd:null,saved:[],popSeen:false,booking:null,bookings:[],calDet:null,calFrom:null,cars:[car0('ELN2102-1'),car0('LPN2102-1')],defCar:0,form:null};}
+ variant:variant||'B',scroll:0,timerEnd:null,saved:[],popSeen:false,booking:null,bookings:[],calDet:null,calFrom:null,cars:[car0('ELN2102-1'),Object.assign(car0('LPN2102-1'),{p:4,h:'1500'})],defCar:0,form:null};}
 let S=fresh('B');
 
 /* ==================== VYKRESLENÍ OBRAZOVEK ==================== */
@@ -638,7 +646,7 @@ function detH(St){const b=St.bookings[St.calDet];if(!b)return '';
 /* ---------- vozidla (převzato ze stávajícího rozhraní) ---------- */
 function pgCars(St){return hdr(St)+`<div class="vz"><div class="vzh"><h3>Moje vozy:</h3><div class="vga" data-k="vuz-pridat">+ Přidat vozidlo</div></div>`+St.cars.map((c,i)=>{const d=i===St.defCar;
  return `<div class="vc"><div class="vh"><div>${d?'(Výchozí vozidlo)<br>':''}${esc2(c.n||c.spz)}</div><div>SPZ:<br>${esc2(c.spz)}</div></div><div class="vp"><i>${I.eng}</i><div>Pohon:<b>${POHON[c.p]}</b></div></div>${(c.len||c.w||c.h)?`<div class="vp"><i class="vcar">${I.car2}</i><div>Rozměry v mm (D x Š x V):<b>${c.len||'-'} x ${c.w||'-'} x ${c.h||'-'}</b></div></div>`:''}
-<div class="vb${d?' dis':' vbg'}" data-k="vuz-vychozi" data-v="${i}">${d?'Výchozí vozidlo':'Nastavit jako výchozí'}</div><div class="vb" data-k="vuz-upravit" data-v="${i}">Upravit vozidlo</div><div class="vb${d?' dis':' vbr'}" data-k="vuz-smazat" data-v="${i}">Smazat vozidlo</div></div>`;}).join('')+
+<div class="vb${d?' dis vbgd':' vbg'}" data-k="vuz-vychozi" data-v="${i}">${d?'Výchozí vozidlo':'Nastavit jako výchozí'}</div><div class="vb" data-k="vuz-upravit" data-v="${i}">Upravit vozidlo</div><div class="vb${d?' dis':' vbr'}" data-k="vuz-smazat" data-v="${i}">Smazat vozidlo</div></div>`;}).join('')+
  `<div class="vg" data-k="vuz-pridat">Přidat vozidlo</div>${St.carClose?'<div class="vzz" data-k="vozidla-zavrit">Zavřít</div>':''}</div>`;}
 function esc2(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function pgCarF(St){const f=St.form,ed=f.mode==='edit';
@@ -773,6 +781,7 @@ function render(St,snap){
  if(sh){ if(sh.type==='time') ov=sheetTime(St,sh); else if(sh.type==='tpl') ov=sheetTpl(St,sh); else if(sh.type==='save') ov=sheetSave(St,sh); else if(sh.type==='pop') ov=sheetPop(); else if(sh.type==='pohon') ov=sheetPohon();}
  if(St.calDet!=null) ov+=detH(St);
  ov+=dlgH(St);
+ if(St.ntf&&!snap){const el=Date.now()-St.ntf.t0;ov+=`<div class="ntf"><div class="ntb" style="animation-duration:${St.ntf.ms}ms;animation-delay:-${el}ms"></div><i class="ntc">${I.ok}</i><span>${St.ntf.m}</span><b class="ntx" data-k="ntf-zavrit">${I.ok.replace('M5 12.5l4.5 4.5L19 7.5','M7 7l10 10M17 7L7 17')}</b></div>`;}
  if(St.toast&&!snap) ov+=`<div class="toast">${St.toast}</div>`;
  return {pg,ov};}
 function scrKey(St){
@@ -790,6 +799,8 @@ function paint(){const r=render(S);pgEl.innerHTML=r.pg;ovEl.innerHTML=r.ov;clamp
 function paintOv(){ovEl.innerHTML=render(S).ov;}
 function clampScroll(){const max=Math.max(0,pgEl.offsetHeight-695);S.scroll=Math.min(max,Math.max(0,S.scroll));}
 function onScreen(){const k=scrKey(S);if(k!==lastKey){lastKey=k;REC.screen(k);}}
+/* potvrzení jako v reálném p-OK: zelené oznámení nahoře s křížkem a ubíhajícím pruhem */
+let ntfT=null;function ntf(m,ms){ms=ms||5000;S.ntf={m,t0:Date.now(),ms};clearTimeout(ntfT);ntfT=setTimeout(()=>{S.ntf=null;paintOv();},ms);}
 function toast(m,ms){S.toast=m;clearTimeout(toastT);toastT=setTimeout(()=>{S.toast=null;paintOv();if(typeof RUN!=='undefined')RUN.check();},ms||2200);}
 const OUT='Není součástí tohoto testovacího modulu.';
 function resetFlow(){Object.assign(S,{calDet:null,calFrom:null,menu:false,menuRez:false,sheet:null,dlg:null,mode:'single',month:10,day:null,r1:null,r2:null,a:null,b:null,vehOpen:false,vehDrop:false,scroll:0,timerEnd:null});}
@@ -865,12 +876,13 @@ function act0(k,v,el){
  case 'menu-vozidla': if(S.scr==='s1'||S.scr==='s2'||S.scr==='s3'){S.dlg='cancel';S.calFrom='cars';break;} resetFlow(); S.scr='cars'; REC.goal('vozidla'); break;
  case 'menu-prehled-rezervaci': case 'menu-pozvanky': case 'menu-profil': case 'menu-odhlasit':
  case 'hl-upozorneni': case 'kal-pozvanka': case 'upravit-rezervaci': toast(OUT); REC.goal('mimo',{k}); break;
- case 'vuz-vychozi': if(+v!==S.defCar){S.defCar=+v;S.veh=S.defCar;toast('Výchozí vozidlo je '+vN(S,+v)+'.');REC.goal('vychozi',{spz:vN(S,+v),p:S.cars[+v].p});} break;
+ case 'vuz-vychozi': if(+v!==S.defCar){S.defCar=+v;S.veh=S.defCar;ntf('Vozidlo nastaveno jako výchozí');REC.goal('vychozi',{spz:vN(S,+v),p:S.cars[+v].p});} break;
  case 'vuz-upravit': {const c=S.cars[+v];S.form=Object.assign({mode:'edit',i:+v,f:null,drop:false,err:null},c);S.scr='carf';S.scroll=0;break;}
  case 'vuz-pridat': S.form=Object.assign({mode:'new',i:null,f:null,drop:false,err:null},car0(''));S.form.n='';S.scr='carf';S.scroll=0;break;
  case 'vuz-smazat': if(+v!==S.defCar) S.dlg={delCar:+v}; break;
- case 'dialog-smazat-vuz': {const i=S.dlg.delCar,sp=vN(S,i);S.cars.splice(i,1);if(S.defCar>i)S.defCar--;if(S.veh>i)S.veh--;else if(S.veh===i)S.veh=S.defCar;S.dlg=null;toast('Vozidlo '+sp+' bylo smazáno.');REC.goal('vozidlo-smazano',{spz:sp});break;}
+ case 'dialog-smazat-vuz': {const i=S.dlg.delCar,sp=vN(S,i);S.cars.splice(i,1);if(S.defCar>i)S.defCar--;if(S.veh>i)S.veh--;else if(S.veh===i)S.veh=S.defCar;S.dlg=null;ntf('Vozidlo bylo smazáno');REC.goal('vozidlo-smazano',{spz:sp});break;}
  case 'pole-vozu': S.form.f=v; S.form.drop=false; break;
+ case 'ntf-zavrit': S.ntf=null; clearTimeout(ntfT); break;
  case 'pole-ro': toast('Tento údaj nelze měnit.'); break;
  case 'pohon': S.form.drop=!S.form.drop; S.form.f=null; break;
  case 'pohon-volba': S.form.p=+v; S.form.drop=false; break;
@@ -880,7 +892,7 @@ function act0(k,v,el){
  case 'vuz-form-ulozit': {const f=S.form;f.f=null;const sp=f.spz.trim().toUpperCase();
    if(!sp){f.err='Vyplňte SPZ.';S.scroll=0;REC.mark('err','Chybí SPZ');break;} if(f.mode==='new'&&S.cars.some(c=>c.spz.replace(/\s/g,'')===sp.replace(/\s/g,''))){f.err='Vozidlo s touto SPZ už máte.';S.scroll=0;break;}
    const c={n:f.n.trim()||sp,spz:sp,p:f.p,inv:f.inv,len:f.len,w:f.w,h:f.h,note:f.note};
-   if(f.mode==='new'){S.cars.push(c);toast('Vozidlo '+sp+' bylo přidáno.');} else {S.cars[f.i]=c;toast('Vozidlo bylo aktualizováno.');}
+   if(f.mode==='new'){S.cars.push(c);ntf('Vozidlo bylo přidáno');} else {S.cars[f.i]=c;ntf('Vozidlo bylo aktualizováno');}
    REC.goal('vozidlo',{mode:f.mode,spz:sp,p:f.p});S.form=null;S.scr='cars';S.scroll=0;break;}
  case 'kal-dnes': S.scroll=0; break;
  case 'kal-predchozi': toast('Minulé dny nejsou součástí tohoto testovacího modulu.'); break;
@@ -1304,7 +1316,7 @@ const RUN={on:false,id:null,tester:'',list:[],i:0,variant:'B',vid:false,doneT:nu
   REC.start({tester:RUN.tester,task:tk.id,taskText:tk.text,variant:RUN.variant,series:RUN.id,seriesI:RUN.i+1,seriesN:n,vidName:hasV?vn:null,vidAt:hasV?0:null});
   UI.banner(`<b>${RUN.i+1}. Úkol:</b> ${esc(tk.text)}<button class="skip" id="bskip" data-how="${tk.check?'dalsi':'hotovo'}">Další úkol</button>`);paint();UI.live();USR.render();},
  check(){if(!RUN.on||!REC.on||RUN.ending||(REC.s.success!==true&&!REC.s.wrong))return;
-  if(!RUN.doneT)RUN.doneT=setTimeout(()=>RUN.next('splneno'),15000);
+  if(!RUN.doneT&&!/úvodní str/.test(REC.s.taskText||''))RUN.doneT=setTimeout(()=>RUN.next('splneno'),15000);
   if(S.scr==='home'&&!S.sheet&&!S.dlg&&!S.menu&&S.calDet==null){if(REC.s.homeT==null)REC.s.homeT=REC.t();if(S.toast)return;RUN.ending=true;setTimeout(()=>RUN.next('dokonceno'),700);}},
  async next(how){clearTimeout(RUN.doneT);RUN.doneT=null;RUN.ending=false;if(!REC.on)return;REC.s.end=how;const s=REC.stop();UI.stats();UI.banner(null);
   if(RUN.vid&&s.vidName){const b=await VID.segStop();if(b){await VSTORE.add({id:s.id,name:s.vidName,blob:b,size:b.size,created:new Date().toISOString(),dur:s.dur,tester:RUN.tester});SEND.video(RUN,s.vidName,b);}}
@@ -1348,7 +1360,7 @@ const USR={state:'welcome',free:false,
 
 /* ==================== ANALÝZA TESTŮ (řádky pro XLS i souhrn v administraci) ==================== */
 const ENTRY_K=['hlavni-tlacitko','hl-plus','hl-menu','menu-nova-rezervace','hl-kalendar','zobrazit-kalendar','menu-kalendar','kal-nova-rezervace','vyuziti','menu-vozidla','menu-rezervace'];
-const KNAME={'vozidla-zavrit':'Zavřít (Vozidla)','nav-zpet':'Systémové Zpět telefonu','sablony-mimo':'Mimo okno šablon','vyuziti-mimo':'Mimo okno využití','detail-mimo':'Mimo detail dne','dialog-mimo':'Mimo dialogové okno','ulozit-mimo':'Mimo okno uložení šablony','logo':'Logo v záhlaví (na úvod)','hlavni-tlacitko':'Hlavní tlačítko Rezervace parkování','hl-plus':'Tlačítko + v záhlaví','hl-menu':'Menu (záhlaví)','menu-rezervace':'Menu › Rezervace','menu-nova-rezervace':'Menu › Nová rezervace','hl-kalendar':'Ikona kalendáře v záhlaví','zobrazit-kalendar':'Zobrazit kalendář (úvodní strana)','menu-kalendar':'Menu › Kalendář','kal-nova-rezervace':'Kalendář › Nová rezervace','vyuziti':'Využití Vašich rezervací','menu-vozidla':'Menu › Vozidla',zpet:'‹ Zpět',pokracovat:'Pokračovat','potvrdit-rezervaci':'Potvrdit rezervaci','na-uvodni-stranu':'Na úvodní stranu','pole-prijezd':'Pole Příjezd','pole-odjezd':'Pole Odjezd','cas-potvrdit':'Potvrdit (čas)','cas-zrusit':'Zrušit (čas)','cas-mimo':'Mimo okno času','cas-tab-prijezd':'Záložka Příjezd','cas-tab-odjezd':'Záložka Odjezd','valec-h':'Váleček hodin','valec-m':'Váleček minut','klavesa':'Klávesnice – číslice','klavesa-hotovo':'Klávesnice – Hotovo','klavesa-smazat':'Klávesnice – smazat','pole-hodiny':'Pole hodin','pole-minuty':'Pole minut','pouzit-cas':'Použít navržený čas','den-dostupny':'Den v kalendáři','prepinac-jednodenni':'Přepínač Jednodenní','prepinac-vicedenni':'Přepínač Vícedenní','mesic-dal':'Další měsíc','mesic-zpet':'Předchozí měsíc','nacist-ze-sablony':'Načíst ze šablony','nova-sablona':'Nová šablona','sablona':'Výběr šablony','sablona-smazat':'Smazat šablonu','sablony-zavrit':'Zavřít šablony','ulozit-sablonu':'Uložit šablonu','nazev-sablony':'Pole Název šablony','vuz-zmenit':'Změnit (vozidlo)','vuz-ulozit':'Uložit volby vozidla','vuz-nabijecka':'Nabíječka (zaškrtnutí)','vyuziti-zavrit':'Zavřít (využití)','k1-krizek':'Křížek v kroku 1','k2-krizek':'Křížek v kroku 2','k3-krizek':'Křížek v kroku 3','dialog-zrusit':'Zrušit rezervaci (dialog)','dialog-pokracovat':'Pokračovat v rezervaci (dialog)','nav-zpet':'Systémové Zpět','kal-detail':'Detail rezervace (kalendář)','detail-zavrit':'Zavřít detail','uvolnit-rezervaci':'Uvolnit rezervaci','vuz-pridat':'Přidat vozidlo','vuz-vychozi':'Výchozí vozidlo','vuz-upravit':'Upravit vozidlo','vuz-smazat':'Smazat vozidlo','vuz-form-ulozit':'Přidat / Aktualizovat vozidlo','pole-vozu':'Pole formuláře vozidla','pohon':'Pohon (rozbalit)','pohon-volba':'Volba pohonu','jak-pohon':'Jak vybrat pohon','logo':'Logo','hl-upozorneni':'Zvonek (upozornění)','url':'Adresní řádek'};
+const KNAME={'ntf-zavrit':'Křížek oznámení','vozidla-zavrit':'Zavřít (Vozidla)','nav-zpet':'Systémové Zpět telefonu','sablony-mimo':'Mimo okno šablon','vyuziti-mimo':'Mimo okno využití','detail-mimo':'Mimo detail dne','dialog-mimo':'Mimo dialogové okno','ulozit-mimo':'Mimo okno uložení šablony','logo':'Logo v záhlaví (na úvod)','hlavni-tlacitko':'Hlavní tlačítko Rezervace parkování','hl-plus':'Tlačítko + v záhlaví','hl-menu':'Menu (záhlaví)','menu-rezervace':'Menu › Rezervace','menu-nova-rezervace':'Menu › Nová rezervace','hl-kalendar':'Ikona kalendáře v záhlaví','zobrazit-kalendar':'Zobrazit kalendář (úvodní strana)','menu-kalendar':'Menu › Kalendář','kal-nova-rezervace':'Kalendář › Nová rezervace','vyuziti':'Využití Vašich rezervací','menu-vozidla':'Menu › Vozidla',zpet:'‹ Zpět',pokracovat:'Pokračovat','potvrdit-rezervaci':'Potvrdit rezervaci','na-uvodni-stranu':'Na úvodní stranu','pole-prijezd':'Pole Příjezd','pole-odjezd':'Pole Odjezd','cas-potvrdit':'Potvrdit (čas)','cas-zrusit':'Zrušit (čas)','cas-mimo':'Mimo okno času','cas-tab-prijezd':'Záložka Příjezd','cas-tab-odjezd':'Záložka Odjezd','valec-h':'Váleček hodin','valec-m':'Váleček minut','klavesa':'Klávesnice – číslice','klavesa-hotovo':'Klávesnice – Hotovo','klavesa-smazat':'Klávesnice – smazat','pole-hodiny':'Pole hodin','pole-minuty':'Pole minut','pouzit-cas':'Použít navržený čas','den-dostupny':'Den v kalendáři','prepinac-jednodenni':'Přepínač Jednodenní','prepinac-vicedenni':'Přepínač Vícedenní','mesic-dal':'Další měsíc','mesic-zpet':'Předchozí měsíc','nacist-ze-sablony':'Načíst ze šablony','nova-sablona':'Nová šablona','sablona':'Výběr šablony','sablona-smazat':'Smazat šablonu','sablony-zavrit':'Zavřít šablony','ulozit-sablonu':'Uložit šablonu','nazev-sablony':'Pole Název šablony','vuz-zmenit':'Změnit (vozidlo)','vuz-ulozit':'Uložit volby vozidla','vuz-nabijecka':'Nabíječka (zaškrtnutí)','vyuziti-zavrit':'Zavřít (využití)','k1-krizek':'Křížek v kroku 1','k2-krizek':'Křížek v kroku 2','k3-krizek':'Křížek v kroku 3','dialog-zrusit':'Zrušit rezervaci (dialog)','dialog-pokracovat':'Pokračovat v rezervaci (dialog)','nav-zpet':'Systémové Zpět','kal-detail':'Detail rezervace (kalendář)','detail-zavrit':'Zavřít detail','uvolnit-rezervaci':'Uvolnit rezervaci','vuz-pridat':'Přidat vozidlo','vuz-vychozi':'Výchozí vozidlo','vuz-upravit':'Upravit vozidlo','vuz-smazat':'Smazat vozidlo','vuz-form-ulozit':'Přidat / Aktualizovat vozidlo','pole-vozu':'Pole formuláře vozidla','pohon':'Pohon (rozbalit)','pohon-volba':'Volba pohonu','jak-pohon':'Jak vybrat pohon','logo':'Logo','hl-upozorneni':'Zvonek (upozornění)','url':'Adresní řádek'};
 function homeHow(s){const t=s.taps.filter(x=>x.t>=s.successT&&x.t<=s.homeT&&x.k).pop();return t?kName(t.k):'';}
 const kName=k=>k?(KNAME[k]||k):'(mimo ovládací prvky)';
 function analyze(s){const st=sStats(s);const taps=s.taps.filter(t=>!t.z);
@@ -1363,7 +1375,7 @@ function analyze(s){const st=sStats(s);const taps=s.taps.filter(t=>!t.z);
  const row={id:s.id,series:s.series||'',tester:s.tester,task:s.task,variant:s.variant,start:s.start,res:st.res?RES_TXT[st.res]:'',err:wrongTxt(s),
   time:+(st.time/1000).toFixed(1),dur:+(s.dur/1000).toFixed(1),taps:st.taps,tapsToGoal:st.tapsToGoal,dead:taps.filter(t=>!t.k).length,dis:taps.filter(t=>t.dis).length,
   route:s.route?ROUTE_TXT[s.route]:'',first:first?kName(first.k):'',rets:rets.length,errs:errs.length,backs:s.backs,seq:s.seq??'',end:s.end||'',video:s.vidName||'',note:s.note||'',
-  home:s.successT!=null&&s.homeT!=null?+((s.homeT-s.successT)/1000).toFixed(1):'',homeHow:s.successT==null?'':(s.homeT!=null?homeHow(s):'nevrátil se (do 15 s)')};
+  home:s.successT!=null&&s.homeT!=null?+((s.homeT-s.successT)/1000).toFixed(1):'',homeHow:s.successT==null?'':(s.homeT!=null?homeHow(s):'nevrátil se')};
  return {row,steps,rets,errs};}
 const median=a=>{const b=a.filter(x=>x!=null).sort((x,y)=>x-y);if(!b.length)return null;const m=Math.floor(b.length/2);return b.length%2?b[m]:(b[m-1]+b[m])/2;};
 const avg=a=>{const b=a.filter(x=>x!=null);return b.length?b.reduce((p,c)=>p+c,0)/b.length:null;};
