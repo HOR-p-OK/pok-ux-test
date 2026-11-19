@@ -1401,7 +1401,7 @@ const MLIVE=typeof MOBILE_LIVE!=='undefined'&&MOBILE_LIVE;   /* ostrá verze: v�
 var MB=window.MB={dict:null,sr:null,listening:false,
  vv(){const v=window.visualViewport;return v?{w:v.width,h:v.height,top:v.offsetTop}:{w:innerWidth,h:innerHeight,top:0};},
  layout(){const st=$('#stage'),bar=$('#mbar'),v=MB.vv();if(!bar)return;const bh=bar.classList.contains('on')?bar.offsetHeight:0;
-  st.style.top=v.top+'px';st.style.height=v.h+'px';
+  st.style.top=v.top+'px';st.style.height=v.h+'px';if(v.h!==MB.lastH){MB.lastH=v.h;MB.wantShift=true;}
   MB.fullH=Math.max(MB.fullH||0,v.h);if(v.w!==MB.lastW){MB.lastW=v.w;MB.fullH=v.h;}const k=Math.min(v.w/390,(MB.fullH-bh)/695);scale=k;
   phEl.style.transform=`translateY(${-96*k}px) scale(${k})`;
   const w=$('#phwrap');w.style.width=390*k+'px';w.style.height=695*k+'px';w.style.top=(bh-(MB.shift||0))+'px';
@@ -1420,7 +1420,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x28</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x32</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
@@ -1501,11 +1501,12 @@ MB.place=function(){const cur=REPLAY?null:txtGet();const A=$('#mein'),T=$('#mta2
  el.classList.add('on');
  /* klávesnice zakryla pole → posunout telefon nahoru jako skutečný prohlížeč */
  const v=MB.vv(),bottom=v.h-12,need=r.bottom+MB.shift-st.top-bottom;const ns=Math.max(0,Math.round(need));
- if(Math.abs(ns-MB.shift)>2){MB.shift=ns;MB.layout();}};
+ /* jen při otevření pole nebo změně výšky (klávesnice); při posunu stránky prstem telefon nehýbat, jinak se posun vyruší */
+ if(!MB.wantShift)return;MB.wantShift=false;if(Math.abs(ns-MB.shift)>2){MB.shift=ns;MB.layout();}};
 kbSync=function(){const cur=REPLAY?null:txtGet();const on=cur!=null;const key=on?(S.sheet&&S.sheet.type==='save'?'save':S.form.f):null;
  MB.place();const el=on?MB.inp():null;
  if(!on){MB.ek=null;const a=document.activeElement;if(a&&(a.id==='mein'||a.id==='mta2'))a.blur();return;}
- if(key!==MB.ek){MB.ek=key;MB.kbOff=false;const num=['len','w','h'].includes(key);el.setAttribute('inputmode',num?'numeric':'text');el.setAttribute('autocapitalize',key==='spz'?'characters':'sentences');el.classList.toggle('up',key==='spz');el.value=cur;}
+ if(key!==MB.ek){MB.ek=key;MB.kbOff=false;MB.wantShift=true;const num=['len','w','h'].includes(key);el.setAttribute('inputmode',num?'numeric':'text');el.setAttribute('autocapitalize',key==='spz'?'characters':'sentences');el.classList.toggle('up',key==='spz');el.value=cur;}
  if(MB.kbOff){if(document.activeElement===el)el.blur();return;}
  if(document.activeElement!==el){try{el.focus({preventScroll:true});const n=el.value.length;el.setSelectionRange(n,n);}catch(e){}}};
 /* 3 s bez psaní → klávesnice se sama zavře (pole přestane být aktivní) */
