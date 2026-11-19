@@ -1001,7 +1001,7 @@ function pUp(x,y){REC.ev('u',x,y);showFinger(x,y,false);const g=G;G=null;if(!g)r
 }
 function phonePt(e){const r=phEl.getBoundingClientRect();return [(e.clientX-r.left)/scale,(e.clientY-r.top)/scale];}
 function bindInput(){
- phEl.addEventListener('pointerdown',e=>{if(REPLAY)return;e.preventDefault();if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();phEl.setPointerCapture(e.pointerId);const [x,y]=phonePt(e);pDown(x,y);});
+ phEl.addEventListener('pointerdown',e=>{if(REPLAY)return;e.preventDefault();if(document.activeElement&&document.activeElement!==document.body&&!document.activeElement.classList.contains('mfi'))document.activeElement.blur();phEl.setPointerCapture(e.pointerId);const [x,y]=phonePt(e);pDown(x,y);});
  phEl.addEventListener('pointermove',e=>{if(REPLAY)return;const [x,y]=phonePt(e);pMove(x,y);});
  phEl.addEventListener('pointerup',e=>{if(REPLAY)return;const [x,y]=phonePt(e);pUp(x,y);});
  phEl.addEventListener('pointerleave',()=>{if(!G&&!REPLAY)finger.style.display='none';});
@@ -1501,7 +1501,8 @@ MB.place=function(){const cur=REPLAY?null:txtGet();const A=$('#mein'),T=$('#mta2
 kbSync=function(){const cur=REPLAY?null:txtGet();const on=cur!=null;const key=on?(S.sheet&&S.sheet.type==='save'?'save':S.form.f):null;
  MB.place();const el=on?MB.inp():null;
  if(!on){MB.ek=null;const a=document.activeElement;if(a&&(a.id==='mein'||a.id==='mta2'))a.blur();return;}
- if(key!==MB.ek){MB.ek=key;const num=['len','w','h'].includes(key);el.setAttribute('inputmode',num?'numeric':'text');el.setAttribute('autocapitalize',key==='spz'?'characters':'sentences');el.classList.toggle('up',key==='spz');el.value=cur;}
+ if(key!==MB.ek){MB.ek=key;MB.kbOff=false;const num=['len','w','h'].includes(key);el.setAttribute('inputmode',num?'numeric':'text');el.setAttribute('autocapitalize',key==='spz'?'characters':'sentences');el.classList.toggle('up',key==='spz');el.value=cur;}
+ if(MB.kbOff){if(document.activeElement===el)el.blur();return;}
  if(document.activeElement!==el){try{el.focus({preventScroll:true});const n=el.value.length;el.setSelectionRange(n,n);}catch(e){}}};
 MB.editDone=()=>{REC.ev('k',0,0,'Enter');handleKey('Enter');kbSync();};
 /* úprava průběhu testu */
@@ -1525,6 +1526,13 @@ window.addEventListener('DOMContentLoaded',()=>{
  ['#mein','#mta2'].forEach(q=>{const mi=$(q);mi.addEventListener('input',()=>{if(REPLAY)return;REC.ev('n',0,0,mi.value.slice(0,200));setName(mi.value);});
   if(q==='#mein')mi.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();MB.editDone();}});});
  phEl.addEventListener('pointermove',()=>{if(G)MB.place();});
+ /* klepnutí mimo textové pole zavře klávesnici (jako ve skutečném prohlížeči); posun stránky ji nechá otevřenou */
+ const TXK=['pole-vozu','nazev-sablony'];const _tap=REC.tap;REC.tap=function(k){MB.tapK=k||'';return _tap.apply(this,arguments);};
+ phEl.addEventListener('pointerup',()=>{if(MB.tapK===undefined)return;const k=MB.tapK;MB.tapK=undefined;if(REPLAY)return;
+  if(TXK.includes(k)){MB.kbOff=false;kbSync();return;}
+  if(txtGet()==null)return;
+  if(S.scr==='carf'&&S.form&&S.form.f&&!S.sheet){S.form.f=null;paint();}else{MB.kbOff=true;kbSync();}});
+ ['#mein','#mta2'].forEach(q=>$(q).addEventListener('focus',()=>{MB.kbOff=false;}));
  if(window.visualViewport){visualViewport.addEventListener('resize',()=>MB.layout());visualViewport.addEventListener('scroll',()=>MB.layout());}
  window.addEventListener('resize',()=>MB.layout());
  window.addEventListener('popstate',()=>MB.back());
