@@ -657,7 +657,7 @@ function esc2(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt
 function pgCarF(St){const f=St.form,ed=f.mode==='edit';
  const inp=(lab,k,ro,req,ta)=>`<div class="fl2">${lab}${req?' <span class="rq">*</span>':''}</div><div class="fx${ro?' ro':''}${ta?' ta':''}${f.f===k?' ac':''}${f.err&&k==='spz'?' er':''}" data-k="${ro?'pole-ro':'pole-vozu'}" data-v="${k}">${esc2(f[k])}${f.f===k?'<i class="cu"></i>':''}</div>`+(f.err&&k==='spz'?`<div class="fe">${f.err}</div>`:'');
  const drop=f.drop?`<div class="po">${POHON.map((p,i)=>`<div class="${i===f.p?'on':''}" data-k="pohon-volba" data-v="${i}">${p}</div>`).join('')}</div>`:'';
- return hdr(St)+`<div class="vz vf"><h2>${ed?'Aktualizovat vozidlo:':'Vytvořit vozidlo:'}</h2>${inp('Název automobilu:','n')}${inp('SPZ:','spz',ed,true)}
+ return hdr(St)+`<div class="vz vf"><h2>${ed?'Aktualizovat vozidlo:':'Vytvořit vozidlo:'}</h2>${inp('Název automobilu:','n')}${inp('SPZ:','spz',false,true)}
 <div class="fl2">Pohon:</div><div class="fx sl" data-k="pohon"><span>${POHON[f.p]||POHON[0]}</span>${I.dn}</div>${drop}
 <div class="jak" data-k="jak-pohon">${I.info}<span>Jak vybrat pohon vozidla?</span></div>
 <div class="ck2" data-k="vuz-invalida"><i class="${f.inv?'on':''}">${f.inv?'✓':''}</i><span>Vozidlo má invalidní průkaz</span></div>
@@ -895,7 +895,7 @@ function act0(k,v,el){
  case 'pohon-info-zavrit': S.sheet=null; break;
  case 'vuz-invalida': S.form.inv=!S.form.inv; S.form.f=null; break;
  case 'vuz-form-ulozit': {const f=S.form;f.f=null;const sp=f.spz.trim().toUpperCase();
-   if(!sp){f.err='Vyplňte SPZ.';S.scroll=0;REC.mark('err','Chybí SPZ');break;} if(f.mode==='new'&&S.cars.some(c=>c.spz.replace(/\s/g,'')===sp.replace(/\s/g,''))){f.err='Vozidlo s touto SPZ už máte.';S.scroll=0;break;}
+   if(!sp){f.err='Vyplňte SPZ.';S.scroll=0;REC.mark('err','Chybí SPZ');break;} if(S.cars.some((c,i)=>(f.mode==='new'||i!==f.i)&&c.spz.replace(/\s/g,'')===sp.replace(/\s/g,''))){f.err='Vozidlo s touto SPZ už máte.';S.scroll=0;break;}
    const c={n:f.n.trim()||sp,spz:sp,p:f.p,inv:f.inv,len:f.len,w:f.w,h:f.h,note:f.note};
    if(f.mode==='new'){S.cars.push(c);ntf('Vozidlo bylo přidáno');} else {S.cars[f.i]=c;ntf('Vozidlo bylo aktualizováno');}
    REC.goal('vozidlo',{mode:f.mode,spz:sp,p:f.p});S.form=null;S.scr='cars';S.scroll=0;break;}
@@ -1424,7 +1424,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x46</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x51</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
