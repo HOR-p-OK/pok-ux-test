@@ -414,6 +414,7 @@ footer p{font-weight:700;font-size:17px;line-height:1.3;margin-top:30px}
 
 .wn.wk{position:relative;cursor:pointer;width:22px;height:22px;font-size:14px;vertical-align:-5px;margin-left:8px;box-shadow:0 0 0 3px #ffd8c2}
 .wn.wk::after{content:'';position:absolute;inset:-12px}
+.sh.ev{padding:12px 22px 28px}.sh.ev h3{font-size:23px;margin:6px 0 16px}.sh.ev .nt{font-size:18.5px;line-height:1.55;margin-top:8px}.sh.ev .zb{margin-top:24px;height:56px;font-size:18px}
 
 /* ===== mobilní režim ===== */
 body.mob{background:#f5f6fa;overscroll-behavior:none;touch-action:manipulation}
@@ -666,7 +667,7 @@ function pgCarF(St){const f=St.form,ed=f.mode==='edit';
 <div class="ck2" data-k="vuz-invalida"><i class="${f.inv?'on':''}">${f.inv?'✓':''}</i><span>Vozidlo má invalidní průkaz</span></div>
 ${inp('Délka vozu v mm:','len')}${inp('Šířka vozu v mm:','w')}${inp('Výška vozu v mm:','h')}${inp('Poznámka:','note',false,false,true)}
 <div class="vg" data-k="vuz-form-ulozit">${ed?'Aktualizovat vozidlo':'Přidat vozidlo'}</div></div>`;}
-function sheetEv(){return `<div class="dim" data-k="nabijecka-info-mimo"></div><div class="sh" id="sheet"><div class="hdz"><div class="hd"></div><h3>Parkovací místo s nabíječkou</h3></div><div class="nt" style="margin-top:6px">Vaše volba (parkovací místo s nabíječkou) pravděpodobně zmenší množinu míst, ze kterých budu vybírat. Pokud se Vám rezervace nezdaří, zkuste tento požadavek zrušit a pravděpodobnost nalezení volného místa se zvětší.</div><div class="zb" data-k="nabijecka-info-zavrit">Zavřít</div></div>`;}
+function sheetEv(){return `<div class="dim" data-k="nabijecka-info-mimo"></div><div class="sh ev" id="sheet"><div class="hdz"><div class="hd"></div><h3>Parkovací místo s nabíječkou</h3></div><div class="nt" style="margin-top:6px">Vaše volba (parkovací místo s nabíječkou) pravděpodobně zmenší množinu míst, ze kterých budu vybírat. Pokud se Vám rezervace nezdaří, zkuste tento požadavek zrušit a pravděpodobnost nalezení volného místa se zvětší.</div><div class="zb" data-k="nabijecka-info-zavrit">Zavřít</div></div>`;}
 function sheetPohon(){return `<div class="dim" data-k="pohon-info-zavrit"></div><div class="sh" id="sheet"><div class="hdz"><div class="hd"></div><h3>Jak vybrat pohon vozidla?</h3></div><div class="nt" style="margin-top:6px">Pohon zvolte podle technického průkazu vozidla. Vozidla s pohonem <b>Elektrický + Plug-in hybrid</b> mohou využívat místa s nabíječkou.</div><div class="zb" data-k="pohon-info-zavrit">Zavřít</div></div>`;}
 function calH(St){
  const m=St.month,first=new Date(2026,m,1),off=(first.getDay()+6)%7,dim=new Date(2026,m+1,0).getDate(),pdim=new Date(2026,m,0).getDate();
@@ -1435,7 +1436,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x66</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x71</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
