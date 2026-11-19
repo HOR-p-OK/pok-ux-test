@@ -452,6 +452,7 @@ body.mob{background:#f5f6fa;overscroll-behavior:none;touch-action:manipulation}
 .mfi{display:none;position:absolute;z-index:25;box-sizing:border-box;margin:0;border-style:solid;font-family:Poppins,sans-serif;color:#22252a;outline:none;-webkit-appearance:none;appearance:none;box-shadow:none;resize:none;line-height:1.3}
 .mfi.on{display:block}
 .mfi.up{text-transform:uppercase}
+.mob .mver{font-size:11px;color:#999;text-align:center;margin:10px 0 0}
 </style></head>
 <body class="shell">
 <div id="app">
@@ -1403,7 +1404,10 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   st.style.top=v.top+'px';st.style.height=v.h+'px';
   MB.fullH=Math.max(MB.fullH||0,v.h);if(v.w!==MB.lastW){MB.lastW=v.w;MB.fullH=v.h;}const k=Math.min(v.w/390,(MB.fullH-bh)/695);scale=k;
   phEl.style.transform=`translateY(${-96*k}px) scale(${k})`;
-  const w=$('#phwrap');w.style.width=390*k+'px';w.style.height=695*k+'px';w.style.top=(bh-(MB.shift||0))+'px';MB.place();},
+  const w=$('#phwrap');w.style.width=390*k+'px';w.style.height=695*k+'px';w.style.top=(bh-(MB.shift||0))+'px';
+  /* část telefonu zakrytá klávesnicí → stránku jde posunout o tolik dál, aby byl vidět i její spodek */
+  const cv=Math.max(0,Math.round((bh-(MB.shift||0)+695*k-v.h)/k));if(cv!==MB.cover){MB.cover=cv;if(pgEl&&S){clampScroll();pgEl.style.transform=`translateY(${-S.scroll}px)`;}}
+  MB.place();},
  task(){return TASKS.find(t=>t.id===RUN.list[RUN.i]);},
  bar(on){const b=$('#mbar');b.classList.toggle('on',!!on);
   if(on){const n=RUN.list.length;b.innerHTML=USR.free?`<span class="mt"><b>Volný test</b> – nic se nezaznamenává</span><button id="mfree0">Konec</button>`:`<span class="mt"><b>${RUN.i+1}/${n}</b> ${esc(MB.task().text)}</span><button id="mskip">Nevím dál</button>`;
@@ -1416,7 +1420,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x28</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
@@ -1504,6 +1508,9 @@ kbSync=function(){const cur=REPLAY?null:txtGet();const on=cur!=null;const key=on
  if(key!==MB.ek){MB.ek=key;MB.kbOff=false;const num=['len','w','h'].includes(key);el.setAttribute('inputmode',num?'numeric':'text');el.setAttribute('autocapitalize',key==='spz'?'characters':'sentences');el.classList.toggle('up',key==='spz');el.value=cur;}
  if(MB.kbOff){if(document.activeElement===el)el.blur();return;}
  if(document.activeElement!==el){try{el.focus({preventScroll:true});const n=el.value.length;el.setSelectionRange(n,n);}catch(e){}}};
+/* 3 s bez psaní → klávesnice se sama zavře (pole přestane být aktivní) */
+MB.idle=()=>{clearTimeout(MB.idleT);MB.idleT=setTimeout(()=>{const a=document.activeElement;if(!a||(a.id!=='mein'&&a.id!=='mta2'))return;
+ if(S.scr==='carf'&&S.form&&S.form.f&&!S.sheet){S.form.f=null;paint();}else{MB.kbOff=true;kbSync();}},3000);};
 MB.editDone=()=>{REC.ev('k',0,0,'Enter');handleKey('Enter');kbSync();};
 /* úprava průběhu testu */
 const _go=RUN.go;
@@ -1532,7 +1539,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(TXK.includes(k)){MB.kbOff=false;kbSync();return;}
   if(txtGet()==null)return;
   if(S.scr==='carf'&&S.form&&S.form.f&&!S.sheet){S.form.f=null;paint();}else{MB.kbOff=true;kbSync();}});
- ['#mein','#mta2'].forEach(q=>$(q).addEventListener('focus',()=>{MB.kbOff=false;}));
+ ['#mein','#mta2'].forEach(q=>{const e=$(q);e.addEventListener('focus',()=>{MB.kbOff=false;MB.idle();});e.addEventListener('input',()=>MB.idle());e.addEventListener('keydown',()=>MB.idle());});
+ clampScroll=function(){const max=Math.max(0,pgEl.offsetHeight-695+(MB.cover||0));S.scroll=Math.min(max,Math.max(0,S.scroll));};
  if(window.visualViewport){visualViewport.addEventListener('resize',()=>MB.layout());visualViewport.addEventListener('scroll',()=>MB.layout());}
  window.addEventListener('resize',()=>MB.layout());
  window.addEventListener('popstate',()=>MB.back());
