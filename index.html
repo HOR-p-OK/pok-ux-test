@@ -453,6 +453,8 @@ body.mob{background:#f5f6fa;overscroll-behavior:none;touch-action:manipulation}
 .mfi.on{display:block}
 .mfi.up{text-transform:uppercase}
 .mob .mver{font-size:11px;color:#999;text-align:center;margin:10px 0 0}
+#msel{display:none;position:absolute;z-index:24;opacity:0;margin:0;padding:0;border:0;font-size:16px;-webkit-appearance:none;appearance:none;background:transparent}
+#msel.on{display:block}
 </style></head>
 <body class="shell">
 <div id="app">
@@ -1420,7 +1422,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x32</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x36</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
@@ -1490,7 +1492,14 @@ var MB=window.MB={dict:null,sr:null,listening:false,
 MB.shift=0;
 MB.fld=()=>{if(S.sheet&&S.sheet.type==='save')return document.querySelector('#phone [data-k=nazev-sablony]');return document.querySelector('#phone .fx.ac');};
 MB.inp=()=>{const ta=S.scr==='carf'&&S.form&&S.form.f==='note'&&!S.sheet;return ta?$('#mta2'):$('#mein');};
-MB.place=function(){const cur=REPLAY?null:txtGet();const A=$('#mein'),T=$('#mta2');if(!A)return;
+/* výběr pohonu: skutečný <select> prohlížeče položený na pole → systémový výběr telefonu jako v originále */
+MB.placeSel=function(){const m=$('#msel');if(!m)return;const f=(!REPLAY&&S.scr==='carf'&&S.form&&!S.sheet&&!S.dlg)?document.querySelector('#phone [data-k=pohon]'):null;
+ if(!f||$('#intro').classList.contains('on')){m.classList.remove('on');return;}
+ const r=f.getBoundingClientRect(),st=$('#stage').getBoundingClientRect();
+ Object.assign(m.style,{left:(r.left-st.left)+'px',top:(r.top-st.top)+'px',width:r.width+'px',height:r.height+'px'});
+ if(+m.value!==S.form.p)m.value=String(S.form.p);m.classList.add('on');};
+MB.selPt=()=>{const f=document.querySelector('#phone [data-k=pohon]'),ph=phEl.getBoundingClientRect();if(!f)return [0,0];const r=f.getBoundingClientRect();return [(r.left+r.width/2-ph.left)/scale,(r.top+r.height/2-ph.top)/scale];};
+MB.place=function(){MB.placeSel();const cur=REPLAY?null:txtGet();const A=$('#mein'),T=$('#mta2');if(!A)return;
  const on=cur!=null&&!$('#intro').classList.contains('on');const f=on?MB.fld():null;
  [A,T].forEach(x=>{if(!on||!f||x!==MB.inp()){x.classList.remove('on');}});
  if(!on||!f){if(MB.shift){MB.shift=0;MB.layout();}return;}
@@ -1531,6 +1540,10 @@ window.addEventListener('DOMContentLoaded',()=>{
  Object.assign(CFG,{vid:false,seq:false,showTask:false,ep:MLIVE?DEF_EP:'',trial:!MLIVE,sel:null,variant:'rnd'});
  const st=$('#stage');const bar=document.createElement('div');bar.id='mbar';st.insertBefore(bar,st.firstChild);
  st.insertAdjacentHTML('beforeend','<input id="mein" class="mfi" type="text" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"><textarea id="mta2" class="mfi" autocomplete="off" spellcheck="false"></textarea>');
+ st.insertAdjacentHTML('beforeend','<select id="msel">'+POHON.map((p,i)=>`<option value="${i}">${p}</option>`).join('')+'</select>');
+ {const m=$('#msel');
+  m.addEventListener('pointerdown',()=>{if(REPLAY||!S.form)return;const [x,y]=MB.selPt();REC.tap('pohon',null,x,y,false,false);if(S.form.f){S.form.f=null;paint();}});
+  m.addEventListener('change',()=>{if(REPLAY||!S.form)return;const [x,y]=MB.selPt();REC.tap('pohon-volba',m.value,x,y,false,false);act('pohon-volba',m.value);paint();});}
  ['#mein','#mta2'].forEach(q=>{const mi=$(q);mi.addEventListener('input',()=>{if(REPLAY)return;REC.ev('n',0,0,mi.value.slice(0,200));setName(mi.value);});
   if(q==='#mein')mi.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();MB.editDone();}});});
  phEl.addEventListener('pointermove',()=>{if(G)MB.place();});
