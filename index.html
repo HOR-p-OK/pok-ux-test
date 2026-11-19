@@ -808,7 +808,7 @@ function onScreen(){const k=scrKey(S);if(k!==lastKey){lastKey=k;REC.screen(k);}}
 let ntfT=null;function ntf(m,ms){ms=ms||5000;S.ntf={m,t0:Date.now(),ms};clearTimeout(ntfT);ntfT=setTimeout(()=>{S.ntf=null;paintOv();},ms);}
 function toast(m,ms){S.toast=m;clearTimeout(toastT);toastT=setTimeout(()=>{S.toast=null;paintOv();if(typeof RUN!=='undefined')RUN.check();},ms||2200);}
 const OUT='Není součástí tohoto testovacího modulu.';
-function resetFlow(){Object.assign(S,{calDet:null,calFrom:null,menu:false,menuRez:false,sheet:null,dlg:null,mode:'single',month:10,day:null,r1:null,r2:null,a:null,b:null,vehOpen:false,vehDrop:false,scroll:0,timerEnd:null});}
+function resetFlow(){Object.assign(S,{pd:null,calDet:null,calFrom:null,menu:false,menuRez:false,sheet:null,dlg:null,mode:'single',month:10,day:null,r1:null,r2:null,a:null,b:null,vehOpen:false,vehDrop:false,scroll:0,timerEnd:null});}
 function goS1(route){clearTimeout(pendT);resetFlow();S.veh=S.defCar;S.scr='s1';REC.route(route);}
 function fwdA(from){for(let t=from;t<=1435;t+=5) if(okA(S,t)) return t; for(let t=from;t>=0;t-=5) if(okA(S,t)) return t; return null;}
 function fwdB(from,a){for(let t=from;t<=1440;t+=5) if(okB(S,t,a)) return t; for(let t=from;t>=5;t-=5) if(okB(S,t,a)) return t; return null;}
@@ -853,7 +853,7 @@ function markRet(k,v){const R=w=>REC.mark('ret',w);
  case 'cas-zrusit': case 'cas-mimo': R('Zavřel nástroj času bez potvrzení'); break;
  case 'pole-prijezd': if(S.a!=null) R('Znovu otevřel čas příjezdu'); break;
  case 'pole-odjezd': if(S.b!=null) R('Znovu otevřel čas odjezdu'); break;
- case 'den-dostupny': if(S.scr==='s1'&&((S.mode==='single'&&S.day!=null&&S.day!==+v)||(S.mode==='multi'&&S.r2))) R('Změnil vybraný den'); break;
+ case 'den-dostupny': if(S.scr==='s1'&&((S.mode==='single'&&S.pd==null&&S.day!=null&&S.day!==+v)||(S.mode==='multi'&&S.r2))) R('Změnil vybraný den'); break;
  case 'prepinac-jednodenni': if(S.mode!=='single'&&S.r1) R('Přepnul na jednodenní'); break;
  case 'prepinac-vicedenni': if(S.mode!=='multi'&&S.day) R('Přepnul na vícedenní'); break;
  case 'sablony-zavrit': case 'sablony-mimo': R('Zavřel šablony bez výběru'); break;
@@ -920,13 +920,18 @@ function act0(k,v,el){
  case 'vuz-volba': S.tv=+v; S.vehDrop=false; break;
  case 'vuz-nabijecka': S.tev=!S.tev; break;
  case 'vuz-ulozit': S.veh=S.tv; S.ev=S.tev; S.vehOpen=false; break;
- case 'prepinac-jednodenni': if(S.mode!=='single'){S.mode='single';S.r1=S.r2=null;S.a=S.b=null;} break;
- case 'prepinac-vicedenni': if(S.mode!=='multi'){S.mode='multi';S.day=null;S.a=S.b=null;} break;
+ case 'prepinac-jednodenni': S.pd=null; if(S.mode!=='single'){S.mode='single';S.r1=S.r2=null;S.a=S.b=null;} break;
+ case 'prepinac-vicedenni': clearTimeout(pendT); S.pd=null; if(S.mode!=='multi'){S.mode='multi';S.day=null;S.a=S.b=null;} break;
  case 'mesic-zpet': if(S.month>10) S.month--; break;
  case 'mesic-dal': if(S.month<11) S.month++; break;
  case 'den-dostupny': { const d=+v;
    if(el&&el.classList.contains('dis')) break;
-   if(S.mode==='single'){ if(S.day!==d){S.day=d;S.a=S.b=null;} clearTimeout(pendT); pendT=setTimeout(()=>{if(S.scr==='s1'&&S.day===d){S.scr='s2';S.scroll=0;paint();}},REPLAY?280/PSPD:280); }
+   if(S.mode==='single'){ clearTimeout(pendT);
+     /* dvojí ovládání: do 2 s druhý jiný den → vícedenní úsek; stejný den znovu → jednodenní hned; 2 s nic → jednodenní */
+     if(S.pd!=null&&S.pd!==d){const d0=S.pd;S.pd=null;S.mode='multi';S.day=null;S.r1=Math.min(d0,d);S.r2=Math.max(d0,d);S.a=S.b=null;
+       pendT=setTimeout(()=>{if(S.scr==='s1'&&S.mode==='multi'&&S.r2){S.scr='s2';S.scroll=0;paint();}},REPLAY?350/PSPD:350);}
+     else if(S.pd===d){S.pd=null;S.scr='s2';S.scroll=0;}
+     else {if(S.day!==d){S.day=d;S.a=S.b=null;} S.pd=d; pendT=setTimeout(()=>{if(S.scr==='s1'&&S.pd===d){S.pd=null;S.scr='s2';S.scroll=0;paint();}},REPLAY?2000/PSPD:2000);} }
    else { if(!S.r1||S.r2||d<=S.r1){S.r1=d;S.r2=null;S.a=S.b=null;} else {S.r2=d;S.a=S.b=null; clearTimeout(pendT); pendT=setTimeout(()=>{if(S.scr==='s1'&&S.r2===d){S.scr='s2';S.scroll=0;paint();}},REPLAY?350/PSPD:350);} }
    break; }
  case 'pole-prijezd': openTime('a'); break;
@@ -1424,7 +1429,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x56</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x61</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
