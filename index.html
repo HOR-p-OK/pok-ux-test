@@ -412,6 +412,9 @@ footer p{font-weight:700;font-size:17px;line-height:1.3;margin-top:30px}
 @keyframes ntbar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .vb.dis.vbgd{background:#86c779;color:#eaf6e6}
 
+.wn.wk{position:relative;cursor:pointer;width:22px;height:22px;font-size:14px;vertical-align:-5px;margin-left:8px;box-shadow:0 0 0 3px #ffd8c2}
+.wn.wk::after{content:'';position:absolute;inset:-12px}
+
 /* ===== mobilní režim ===== */
 body.mob{background:#f5f6fa;overscroll-behavior:none;touch-action:manipulation}
 .mob #app{display:block;height:100%}
@@ -618,7 +621,7 @@ function menuH(St){const car='<i class="car"></i>';
 function vehH(St){
  if(St.vehOpen){const opts=St.vehDrop?`<div class="opt">${St.cars.map((c,i)=>`<div class="${i===St.tv?'on':''}" data-k="vuz-volba" data-v="${i}">${c.n||c.spz} (${c.spz})${i===St.defCar?' • Výchozí':''}</div>`).join('')}</div>`:'';
   return `<div class="box pn"><div class="ph"><b>Výběr vozidla a související parametry</b><div class="zv" data-k="vuz-zavrit">Zavřít ${I.up}</div></div><div class="pl">Vozidlo</div><div class="sel2" data-k="vuz-vyber">${I.car.replace('width="44" height="44"','width="30" height="30"')}<span>${vNm(St,St.tv)} (${vN(St,St.tv)})${St.tv===St.defCar?' • Výchozí':''}</span>${I.dn}</div>${opts}<div class="pl">Požadavky na místo</div><div class="cb" data-k="vuz-nabijecka"><i class="${St.tev?'on':''}">${St.tev?'✓':''}</i><span>Nabíječka (EV) ⚡</span></div><div class="sv" data-k="vuz-ulozit">Uložit volby a zavřít</div></div>`;}
- const sub=St.ev?'Nabíječka: ANO <span class="bl">⚡</span><span class="wn">!</span>':'Nabíječka: NE';
+ const sub=St.ev?'Nabíječka: ANO <span class="bl">⚡</span><span class="wn wk" data-k="nabijecka-info">!</span>':'Nabíječka: NE';
  return `<div class="box veh"><span>${I.car}</span><div class="tx"><div class="n">${vNm(St,St.veh)} • ${vN(St,St.veh)}</div><div class="s">${sub}</div></div><div class="btn" data-k="vuz-zmenit">Změnit</div></div>`;}
 function topH(bar,k,cls,kx){const p=[0,1,2].map(i=>`<i class="${i<k?'on':''}"></i>`).join('');
  return `<div class="top"><div class="bar ${cls||''}" data-k="${kx}-pruh">${bar}</div><div class="x" data-k="${kx}-krizek">${I.x}</div></div><div class="prog">${p}</div>`;}
@@ -663,6 +666,7 @@ function pgCarF(St){const f=St.form,ed=f.mode==='edit';
 <div class="ck2" data-k="vuz-invalida"><i class="${f.inv?'on':''}">${f.inv?'✓':''}</i><span>Vozidlo má invalidní průkaz</span></div>
 ${inp('Délka vozu v mm:','len')}${inp('Šířka vozu v mm:','w')}${inp('Výška vozu v mm:','h')}${inp('Poznámka:','note',false,false,true)}
 <div class="vg" data-k="vuz-form-ulozit">${ed?'Aktualizovat vozidlo':'Přidat vozidlo'}</div></div>`;}
+function sheetEv(){return `<div class="dim" data-k="nabijecka-info-mimo"></div><div class="sh" id="sheet"><div class="hdz"><div class="hd"></div><h3>Parkovací místo s nabíječkou</h3></div><div class="nt" style="margin-top:6px">Vaše volba (parkovací místo s nabíječkou) pravděpodobně zmenší množinu míst, ze kterých budu vybírat. Pokud se Vám rezervace nezdaří, zkuste tento požadavek zrušit a pravděpodobnost nalezení volného místa se zvětší.</div><div class="zb" data-k="nabijecka-info-zavrit">Zavřít</div></div>`;}
 function sheetPohon(){return `<div class="dim" data-k="pohon-info-zavrit"></div><div class="sh" id="sheet"><div class="hdz"><div class="hd"></div><h3>Jak vybrat pohon vozidla?</h3></div><div class="nt" style="margin-top:6px">Pohon zvolte podle technického průkazu vozidla. Vozidla s pohonem <b>Elektrický + Plug-in hybrid</b> mohou využívat místa s nabíječkou.</div><div class="zb" data-k="pohon-info-zavrit">Zavřít</div></div>`;}
 function calH(St){
  const m=St.month,first=new Date(2026,m,1),off=(first.getDay()+6)%7,dim=new Date(2026,m+1,0).getDate(),pdim=new Date(2026,m,0).getDate();
@@ -783,7 +787,7 @@ function render(St,snap){
  if(St.scr==='home') pg=pgHome(St); else if(St.scr==='s1') pg=pgS1(St); else if(St.scr==='s2') pg=St.mode==='multi'?pgS2m(St):pgS2(St); else if(St.scr==='s3') pg=pgS3(St,snap); else if(St.scr==='ok') pg=pgOk(St); else if(St.scr==='cal') pg=pgCal(St); else if(St.scr==='cars') pg=pgCars(St); else if(St.scr==='carf') pg=pgCarF(St);
  pg=`<div class="wrap">${pg}</div>`+(St.scr==='home'||St.scr==='cars'||St.scr==='carf'?`<footer><img src="${IMG_FLOGO}"><p>Děkujeme Vám za spolupráci při testování Parking-OK. Vaše podněty a připomínky uvítáme</p></footer>`:'');
  let ov='';const sh=St.sheet;
- if(sh){ if(sh.type==='time') ov=sheetTime(St,sh); else if(sh.type==='tpl') ov=sheetTpl(St,sh); else if(sh.type==='save') ov=sheetSave(St,sh); else if(sh.type==='pop') ov=sheetPop(); else if(sh.type==='pohon') ov=sheetPohon();}
+ if(sh){ if(sh.type==='time') ov=sheetTime(St,sh); else if(sh.type==='tpl') ov=sheetTpl(St,sh); else if(sh.type==='save') ov=sheetSave(St,sh); else if(sh.type==='pop') ov=sheetPop(); else if(sh.type==='pohon') ov=sheetPohon(); else if(sh.type==='ev') ov=sheetEv();}
  if(St.calDet!=null) ov+=detH(St);
  ov+=dlgH(St);
  if(St.ntf&&!snap){const el=Date.now()-St.ntf.t0;ov+=`<div class="ntf"><div class="ntb" style="animation-duration:${St.ntf.ms}ms;animation-delay:-${el}ms"></div><i class="ntc">${I.ok}</i><span>${St.ntf.m}</span><b class="ntx" data-k="ntf-zavrit">${I.ok.replace('M5 12.5l4.5 4.5L19 7.5','M7 7l10 10M17 7L7 17')}</b></div>`;}
@@ -793,7 +797,7 @@ function scrKey(St){
  let k={home:'Úvodní strana',s1:'Krok 1',s2:'Krok 2',s3:'Krok 3',ok:'Hotovo',cal:'Kalendář',cars:'Vozidla',carf:St.form&&St.form.mode==='new'?'Nové vozidlo':'Úprava vozidla'}[St.scr];
  if(['s1','s2','s3'].includes(St.scr)) k+=St.mode==='multi'?' vícedenní':' jednodenní';
  if(St.menu) k+=' + menu'; if(St.vehOpen) k+=' + vozidlo';
- const sh=St.sheet; if(sh) k+=' + '+({time:sh.entry?'zadání číslicemi':'nástroj času',tpl:'šablony',save:'uložit šablonu',pop:'okno využití',pohon:'nápověda pohon'}[sh.type]);
+ const sh=St.sheet; if(sh) k+=' + '+({time:sh.entry?'zadání číslicemi':'nástroj času',tpl:'šablony',save:'uložit šablonu',pop:'okno využití',pohon:'nápověda pohon',ev:'okno nabíječka'}[sh.type]);
  if(St.calDet!=null) k+=' + detail rezervace';
  if(St.dlg) k+=' + dialog';
  return k;}
@@ -893,6 +897,8 @@ function act0(k,v,el){
  case 'pohon-volba': S.form.p=+v; S.form.drop=false; break;
  case 'jak-pohon': S.sheet={type:'pohon'}; break;
  case 'pohon-info-zavrit': S.sheet=null; break;
+ case 'nabijecka-info': S.sheet={type:'ev'}; break;
+ case 'nabijecka-info-zavrit': case 'nabijecka-info-mimo': S.sheet=null; break;
  case 'vuz-invalida': S.form.inv=!S.form.inv; S.form.f=null; break;
  case 'vuz-form-ulozit': {const f=S.form;f.f=null;const sp=f.spz.trim().toUpperCase();
    if(!sp){f.err='Vyplňte SPZ.';S.scroll=0;REC.mark('err','Chybí SPZ');break;} if(S.cars.some((c,i)=>(f.mode==='new'||i!==f.i)&&c.spz.replace(/\s/g,'')===sp.replace(/\s/g,''))){f.err='Vozidlo s touto SPZ už máte.';S.scroll=0;break;}
@@ -1370,7 +1376,7 @@ const USR={state:'welcome',free:false,
 
 /* ==================== ANALÝZA TESTŮ (řádky pro XLS i souhrn v administraci) ==================== */
 const ENTRY_K=['hlavni-tlacitko','hl-plus','hl-menu','menu-nova-rezervace','hl-kalendar','zobrazit-kalendar','menu-kalendar','kal-nova-rezervace','vyuziti','menu-vozidla','menu-rezervace'];
-const KNAME={'ntf-zavrit':'Křížek oznámení','vozidla-zavrit':'Zavřít (Vozidla)','nav-zpet':'Systémové Zpět telefonu','sablony-mimo':'Mimo okno šablon','vyuziti-mimo':'Mimo okno využití','detail-mimo':'Mimo detail dne','dialog-mimo':'Mimo dialogové okno','ulozit-mimo':'Mimo okno uložení šablony','logo':'Logo v záhlaví (na úvod)','hlavni-tlacitko':'Hlavní tlačítko Rezervace parkování','hl-plus':'Tlačítko + v záhlaví','hl-menu':'Menu (záhlaví)','menu-rezervace':'Menu › Rezervace','menu-nova-rezervace':'Menu › Nová rezervace','hl-kalendar':'Ikona kalendáře v záhlaví','zobrazit-kalendar':'Zobrazit kalendář (úvodní strana)','menu-kalendar':'Menu › Kalendář','kal-nova-rezervace':'Kalendář › Nová rezervace','vyuziti':'Využití Vašich rezervací','menu-vozidla':'Menu › Vozidla',zpet:'‹ Zpět',pokracovat:'Pokračovat','potvrdit-rezervaci':'Potvrdit rezervaci','na-uvodni-stranu':'Na úvodní stranu','pole-prijezd':'Pole Příjezd','pole-odjezd':'Pole Odjezd','cas-potvrdit':'Potvrdit (čas)','cas-zrusit':'Zrušit (čas)','cas-mimo':'Mimo okno času','cas-tab-prijezd':'Záložka Příjezd','cas-tab-odjezd':'Záložka Odjezd','valec-h':'Váleček hodin','valec-m':'Váleček minut','klavesa':'Klávesnice – číslice','klavesa-hotovo':'Klávesnice – Hotovo','klavesa-smazat':'Klávesnice – smazat','pole-hodiny':'Pole hodin','pole-minuty':'Pole minut','pouzit-cas':'Použít navržený čas','den-dostupny':'Den v kalendáři','prepinac-jednodenni':'Přepínač Jednodenní','prepinac-vicedenni':'Přepínač Vícedenní','mesic-dal':'Další měsíc','mesic-zpet':'Předchozí měsíc','nacist-ze-sablony':'Načíst ze šablony','nova-sablona':'Nová šablona','sablona':'Výběr šablony','sablona-smazat':'Smazat šablonu','sablony-zavrit':'Zavřít šablony','ulozit-sablonu':'Uložit šablonu','nazev-sablony':'Pole Název šablony','vuz-zmenit':'Změnit (vozidlo)','vuz-ulozit':'Uložit volby vozidla','vuz-nabijecka':'Nabíječka (zaškrtnutí)','vyuziti-zavrit':'Zavřít (využití)','k1-krizek':'Křížek v kroku 1','k2-krizek':'Křížek v kroku 2','k3-krizek':'Křížek v kroku 3','dialog-zrusit':'Zrušit rezervaci (dialog)','dialog-pokracovat':'Pokračovat v rezervaci (dialog)','nav-zpet':'Systémové Zpět','kal-detail':'Detail rezervace (kalendář)','detail-zavrit':'Zavřít detail','uvolnit-rezervaci':'Uvolnit rezervaci','vuz-pridat':'Přidat vozidlo','vuz-vychozi':'Výchozí vozidlo','vuz-upravit':'Upravit vozidlo','vuz-smazat':'Smazat vozidlo','vuz-form-ulozit':'Přidat / Aktualizovat vozidlo','pole-vozu':'Pole formuláře vozidla','pohon':'Pohon (rozbalit)','pohon-volba':'Volba pohonu','jak-pohon':'Jak vybrat pohon','logo':'Logo','hl-upozorneni':'Zvonek (upozornění)','url':'Adresní řádek'};
+const KNAME={'nabijecka-info':'Vykřičník nabíječky','nabijecka-info-zavrit':'Zavřít (okno nabíječka)','nabijecka-info-mimo':'Mimo okno nabíječka','ntf-zavrit':'Křížek oznámení','vozidla-zavrit':'Zavřít (Vozidla)','nav-zpet':'Systémové Zpět telefonu','sablony-mimo':'Mimo okno šablon','vyuziti-mimo':'Mimo okno využití','detail-mimo':'Mimo detail dne','dialog-mimo':'Mimo dialogové okno','ulozit-mimo':'Mimo okno uložení šablony','logo':'Logo v záhlaví (na úvod)','hlavni-tlacitko':'Hlavní tlačítko Rezervace parkování','hl-plus':'Tlačítko + v záhlaví','hl-menu':'Menu (záhlaví)','menu-rezervace':'Menu › Rezervace','menu-nova-rezervace':'Menu › Nová rezervace','hl-kalendar':'Ikona kalendáře v záhlaví','zobrazit-kalendar':'Zobrazit kalendář (úvodní strana)','menu-kalendar':'Menu › Kalendář','kal-nova-rezervace':'Kalendář › Nová rezervace','vyuziti':'Využití Vašich rezervací','menu-vozidla':'Menu › Vozidla',zpet:'‹ Zpět',pokracovat:'Pokračovat','potvrdit-rezervaci':'Potvrdit rezervaci','na-uvodni-stranu':'Na úvodní stranu','pole-prijezd':'Pole Příjezd','pole-odjezd':'Pole Odjezd','cas-potvrdit':'Potvrdit (čas)','cas-zrusit':'Zrušit (čas)','cas-mimo':'Mimo okno času','cas-tab-prijezd':'Záložka Příjezd','cas-tab-odjezd':'Záložka Odjezd','valec-h':'Váleček hodin','valec-m':'Váleček minut','klavesa':'Klávesnice – číslice','klavesa-hotovo':'Klávesnice – Hotovo','klavesa-smazat':'Klávesnice – smazat','pole-hodiny':'Pole hodin','pole-minuty':'Pole minut','pouzit-cas':'Použít navržený čas','den-dostupny':'Den v kalendáři','prepinac-jednodenni':'Přepínač Jednodenní','prepinac-vicedenni':'Přepínač Vícedenní','mesic-dal':'Další měsíc','mesic-zpet':'Předchozí měsíc','nacist-ze-sablony':'Načíst ze šablony','nova-sablona':'Nová šablona','sablona':'Výběr šablony','sablona-smazat':'Smazat šablonu','sablony-zavrit':'Zavřít šablony','ulozit-sablonu':'Uložit šablonu','nazev-sablony':'Pole Název šablony','vuz-zmenit':'Změnit (vozidlo)','vuz-ulozit':'Uložit volby vozidla','vuz-nabijecka':'Nabíječka (zaškrtnutí)','vyuziti-zavrit':'Zavřít (využití)','k1-krizek':'Křížek v kroku 1','k2-krizek':'Křížek v kroku 2','k3-krizek':'Křížek v kroku 3','dialog-zrusit':'Zrušit rezervaci (dialog)','dialog-pokracovat':'Pokračovat v rezervaci (dialog)','nav-zpet':'Systémové Zpět','kal-detail':'Detail rezervace (kalendář)','detail-zavrit':'Zavřít detail','uvolnit-rezervaci':'Uvolnit rezervaci','vuz-pridat':'Přidat vozidlo','vuz-vychozi':'Výchozí vozidlo','vuz-upravit':'Upravit vozidlo','vuz-smazat':'Smazat vozidlo','vuz-form-ulozit':'Přidat / Aktualizovat vozidlo','pole-vozu':'Pole formuláře vozidla','pohon':'Pohon (rozbalit)','pohon-volba':'Volba pohonu','jak-pohon':'Jak vybrat pohon','logo':'Logo','hl-upozorneni':'Zvonek (upozornění)','url':'Adresní řádek'};
 function homeHow(s){const t=s.taps.filter(x=>x.t>=s.successT&&x.t<=s.homeT&&x.k).pop();return t?kName(t.k):'';}
 const kName=k=>k?(KNAME[k]||k):'(mimo ovládací prvky)';
 function analyze(s){const st=sStats(s);const taps=s.taps.filter(t=>!t.z);
@@ -1429,7 +1435,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x61</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x66</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
