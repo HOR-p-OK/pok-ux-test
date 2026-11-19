@@ -647,7 +647,7 @@ function detH(St){const b=St.bookings[St.calDet];if(!b)return '';
 function pgCars(St){return hdr(St)+`<div class="vz"><div class="vzh"><h3>Moje vozy:</h3><div class="vga" data-k="vuz-pridat">+ Přidat vozidlo</div></div>`+St.cars.map((c,i)=>{const d=i===St.defCar;
  return `<div class="vc"><div class="vh"><div>${d?'(Výchozí vozidlo)<br>':''}${esc2(c.n||c.spz)}</div><div>SPZ:<br>${esc2(c.spz)}</div></div><div class="vp"><i>${I.eng}</i><div>Pohon:<b>${POHON[c.p]}</b></div></div>${(c.len||c.w||c.h)?`<div class="vp"><i class="vcar">${I.car2}</i><div>Rozměry v mm (D x Š x V):<b>${c.len||'-'} x ${c.w||'-'} x ${c.h||'-'}</b></div></div>`:''}
 <div class="vb${d?' dis vbgd':' vbg'}" data-k="vuz-vychozi" data-v="${i}">${d?'Výchozí vozidlo':'Nastavit jako výchozí'}</div><div class="vb" data-k="vuz-upravit" data-v="${i}">Upravit vozidlo</div><div class="vb${d?' dis':' vbr'}" data-k="vuz-smazat" data-v="${i}">Smazat vozidlo</div></div>`;}).join('')+
- `<div class="vg" data-k="vuz-pridat">Přidat vozidlo</div>${St.carClose?'<div class="vzz" data-k="vozidla-zavrit">Zavřít</div>':''}</div>`;}
+ `<div class="vg" data-k="vuz-pridat">Přidat vozidlo</div><div class="vzz" data-k="vozidla-zavrit">Zavřít</div></div>`;}
 function esc2(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function pgCarF(St){const f=St.form,ed=f.mode==='edit';
  const inp=(lab,k,ro,req,ta)=>`<div class="fl2">${lab}${req?' <span class="rq">*</span>':''}</div><div class="fx${ro?' ro':''}${ta?' ta':''}${f.f===k?' ac':''}${f.err&&k==='spz'?' er':''}" data-k="${ro?'pole-ro':'pole-vozu'}" data-v="${k}">${esc2(f[k])}${f.f===k?'<i class="cu"></i>':''}</div>`+(f.err&&k==='spz'?`<div class="fe">${f.err}</div>`:'');
@@ -1032,7 +1032,7 @@ const TASK_DEF=[
  {id:'U2',text:'Zarezervujte si parkování od úterý 17. 11. 17:30 do pátku 20. 11. 10:00.',check:(t,d)=>t==='booking'&&d.mode==='multi'&&d.r1===17&&d.r2===20&&d.a===1050&&d.b===600,fin:finBk,exp:'Út 17. 11. 17:30 – Pá 20. 11. 10:00',desc:(t,d)=>bkTxt(d)},
  {id:'U3',text:'Zarezervujte si parkování na středu 18. 11. od 17:30 do 20:15 a při tom si tento čas uložte jako šablonu s názvem „Návštěva“.',check:(t,d)=>t==='booking'&&d.mode==='single'&&d.d===18&&d.a===1050&&d.b===1215&&hasTpl(),fin:finBk,exp:'St 18. 11. 17:30–20:15 + šablona „Návštěva“',desc:(t,d)=>bkTxt(d)+(hasTpl()?'':', bez šablony „Návštěva“')},
  {id:'U4',text:'Zjistěte, jaké je vaše průměrné využití rezervací za posledních 30 dnů.',check:(t)=>t==='popup'},
- {id:'U7',zavrit:true,text:'Nastavte vozidlo LPN2102-1 jako výchozí a vraťte se na úvodní stránku.',check:(t,d)=>t==='vychozi'&&String(d.spz||'').replace(/\s/g,'')==='LPN2102-1',fin:t=>t==='vychozi',exp:'výchozí LPN2102-1',desc:(t,d)=>`výchozí ${d.spz}`},
+ {id:'U7',text:'Nastavte vozidlo LPN2102-1 jako výchozí a vraťte se na úvodní stránku.',check:(t,d)=>t==='vychozi'&&String(d.spz||'').replace(/\s/g,'')==='LPN2102-1',fin:t=>t==='vychozi',exp:'výchozí LPN2102-1',desc:(t,d)=>`výchozí ${d.spz}`},
  {id:'U5',text:'Volné prozkoumání aplikace (bez úkolu).',check:null}];
 let TASKS=TASK_DEF.map(t=>({...t}));
 function loadTasks(){try{const s=JSON.parse(localStorage.getItem('pok-ux-tasks')||'null');if(s)TASKS.forEach(t=>{if(s[t.id]&&!(t.id==='U6'&&!(/úvodní/.test(s[t.id])&&/E1A/.test(s[t.id]))))t.text=s[t.id];});}catch(e){}}
@@ -1297,7 +1297,7 @@ const SEND={st:'',
  enqueue(fn){SEND.pend++;USR.render();SEND.q=SEND.q.then(fn).catch(()=>{}).then(()=>{SEND.pend--;USR.render();});return SEND.q;},
  video(run,name,blob){if(!SEND.ep()||!blob)return;SEND.enqueue(async()=>{const b=await SEND.b64(blob);await SEND.post({type:'video',run:run.id,folder:run.folder,name:name+vidExt(blob),mime:blob.type,b64:b});});},
  results(run){if(!SEND.ep())return;const L=SESS.filter(s=>s.series===run.id);const A=L.map(analyze);
-  const meta={id:run.id,folder:run.folder,tester:run.tester,variant:run.variant,start:run.start,end:new Date().toISOString(),tasks:run.list.join(' '),video:run.vid?'ano':'ne',ua:navigator.userAgent,screen:screen.width+'×'+screen.height,notes:run.notes||'',count:run.trial?'NE':'ANO'};
+  const meta={id:run.id,folder:run.folder,tester:run.tester,variant:run.variant,start:run.start,end:new Date().toISOString(),tasks:run.list.join(' '),video:run.vid?'ano':'ne',ua:navigator.userAgent,screen:screen.width+'×'+screen.height,notes:run.notes||'',count:run.trial?'NE':'ANO',device:(typeof MOBILE!=='undefined'&&MOBILE)?'mobil':'počítač'};
   SEND.enqueue(()=>SEND.post({type:'results',run:meta,rows:A.map(a=>a.row),steps:A.flatMap(a=>a.steps.map(x=>Object.assign({id:a.row.id,tester:a.row.tester,task:a.row.task},x))),rets:A.flatMap(a=>a.rets.map(x=>Object.assign({id:a.row.id,tester:a.row.tester,task:a.row.task},x))),errs:A.flatMap(a=>a.errs.map(x=>Object.assign({id:a.row.id,tester:a.row.tester,task:a.row.task},x))),raw:L}));},
  notes(run){if(!SEND.ep())return;const z=run.znamky||{};SEND.enqueue(()=>SEND.post({type:'notes',run:{id:run.id,folder:run.folder,tester:run.tester},notes:run.notes||'',znamky:{zPrivet:z.zPrivet||'',zVzhled:z.zVzhled||'',zTexty:z.zTexty||'',zCelk:z.zCelk||''}}));}};
 
@@ -1375,7 +1375,7 @@ function analyze(s){const st=sStats(s);const taps=s.taps.filter(t=>!t.z);
  const row={id:s.id,series:s.series||'',tester:s.tester,task:s.task,variant:s.variant,start:s.start,res:st.res?RES_TXT[st.res]:'',err:wrongTxt(s),
   time:+(st.time/1000).toFixed(1),dur:+(s.dur/1000).toFixed(1),taps:st.taps,tapsToGoal:st.tapsToGoal,dead:taps.filter(t=>!t.k).length,dis:taps.filter(t=>t.dis).length,
   route:s.route?ROUTE_TXT[s.route]:'',first:first?kName(first.k):'',rets:rets.length,errs:errs.length,backs:s.backs,seq:s.seq??'',end:s.end||'',video:s.vidName||'',note:s.note||'',
-  home:s.successT!=null&&s.homeT!=null?+((s.homeT-s.successT)/1000).toFixed(1):'',homeHow:s.successT==null?'':(s.homeT!=null?homeHow(s):'nevrátil se')};
+  home:s.successT!=null&&s.homeT!=null?+((s.homeT-s.successT)/1000).toFixed(1):'',homeHow:s.successT==null?'':(s.homeT!=null?homeHow(s):'nevrátil se'),zav:'ano'};
  return {row,steps,rets,errs};}
 const median=a=>{const b=a.filter(x=>x!=null).sort((x,y)=>x-y);if(!b.length)return null;const m=Math.floor(b.length/2);return b.length%2?b[m]:(b[m-1]+b[m])/2;};
 const avg=a=>{const b=a.filter(x=>x!=null);return b.length?b.reduce((p,c)=>p+c,0)/b.length:null;};
@@ -1396,6 +1396,7 @@ function aggregate(L){const A=L.map(analyze);
 /* ==================== MOBILNÍ REŽIM (test přímo na telefonu) ==================== */
 /* Zapíná se při sestavení: MOB=1 python3 build.py … (vloží const MOBILE=true). Zkušební verze: nic se neodesílá. */
 if(typeof MOBILE!=='undefined'&&MOBILE){
+const MLIVE=typeof MOBILE_LIVE!=='undefined'&&MOBILE_LIVE;   /* ostrá verze: výsledky se odesílají na Google disk */
 var MB=window.MB={dict:null,sr:null,listening:false,
  vv(){const v=window.visualViewport;return v?{w:v.width,h:v.height,top:v.offsetTop}:{w:innerWidth,h:innerHeight,top:0};},
  layout(){const st=$('#stage'),bar=$('#mbar'),v=MB.vv();if(!bar)return;const bh=bar.classList.contains('on')?bar.offsetHeight:0;
@@ -1413,7 +1414,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
  card(h,after){RUN.card(h);$('#intro').scrollTop=0;if(after)after();},
  welcome(){const n=RUN.tasksFor().length;
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
-   <div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>
+   ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
    <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
@@ -1422,6 +1423,9 @@ var MB=window.MB={dict:null,sr:null,listening:false,
  introTxt(n){return INTRO_TXT(n).replace('Během testu není nahráván zvuk ani není aktivována kamera na Vašem počítači.','Během úkolů se nenahrává zvuk ani obraz z kamery Vašeho telefonu.').replace('Tlačítko Další úkol využijte','Aplikaci ovládejte prstem jako obvykle. Zadání úkolu uvidíte vždy před úkolem a během úkolu stále nahoře na obrazovce. Tlačítko Nevím dál využijte');},
  thanks(){const L=SESS.filter(s=>s.series===RUN.id);
   const rows=L.map(s=>{const st=sStats(s);return `<tr><td>${s.seriesI}. ${s.task}</td><td>${st.res?RES_SYM[st.res]+' '+RES_TXT[st.res]:'–'}</td><td>${mmss(s.dur||0)}</td></tr>`;}).join('');
+  if(MLIVE){MB.card(`<p class="big">Děkujeme za Váš čas!</p><p class="ut">Test je ukončen.</p><p class="ut" id="msend"></p>
+   <button class="btn2 mfull" id="mfree">Volně vyzkoušet aplikaci</button>`,()=>{MB.sendSt();
+   $('#mfree').onclick=()=>{USR.free=true;RUN.hideCard();clearTimeout(pendT);S=fresh(RUN.variant);paint();MB.bar(true);};});return;}
   MB.card(`<p class="big">Děkujeme za Váš čas!</p><p class="ut">Test je ukončen.</p>
    <div class="vnote"><b>Zkušební verze:</b> výsledky se nikam neodeslaly. Pro kontrolu je vidíte zde:</div>
    <table class="mres"><tr><th>Úkol</th><th>Výsledek</th><th>Čas</th></tr>${rows}</table>
@@ -1466,6 +1470,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
     try{r.start();btn.classList.add('rec');btn.textContent='■ Zastavit diktování';}catch(e){MB.sr=null;}};
    return;}
   hint.textContent='Napište je, nebo je nadiktujte mikrofonem na klávesnici telefonu.';},
+ sendSt(){const e=$('#msend');if(!e)return;e.innerHTML=SEND.pend?'Výsledky se odesílají – <b>nechte prosím stránku ještě otevřenou</b>.':'Výsledky jsou odeslané. Stránku můžete zavřít.';},
  micStop(){try{if(MB.dict&&MB.listening)MB.dict.stop();}catch(e){}try{if(MB.sr)MB.sr.stop();}catch(e){}},
  depth:0,
  /* záchytné záznamy historie: přidávají se jen při dotyku (prohlížeč jinak záznamy bez dotyku přeskočí a Zpět opustí stránku) */
@@ -1508,13 +1513,13 @@ RUN.next=async function(how){MB.bar(false);return _next.call(RUN,how);};
 const _fin=RUN.finish;
 RUN.finish=async function(){await _fin.call(RUN);MB.bar(false);MB.warned=false;MB.done();};
 USR.cover=function(){};
-const _render=USR.render;USR.render=function(){try{_render.call(USR);}catch(e){}};
+const _render=USR.render;USR.render=function(){try{_render.call(USR);}catch(e){}MB.sendSt();};
 UI.layout=function(){MB.layout();};
 UI.banner=function(text){if(text!==undefined)UI.curTask=text;};
 
 window.addEventListener('DOMContentLoaded',()=>{
  document.body.classList.add('mob');
- Object.assign(CFG,{vid:false,seq:false,showTask:false,ep:'',trial:true,sel:null,variant:'rnd'});
+ Object.assign(CFG,{vid:false,seq:false,showTask:false,ep:MLIVE?DEF_EP:'',trial:!MLIVE,sel:null,variant:'rnd'});
  const st=$('#stage');const bar=document.createElement('div');bar.id='mbar';st.insertBefore(bar,st.firstChild);
  st.insertAdjacentHTML('beforeend','<input id="mein" class="mfi" type="text" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"><textarea id="mta2" class="mfi" autocomplete="off" spellcheck="false"></textarea>');
  ['#mein','#mta2'].forEach(q=>{const mi=$(q);mi.addEventListener('input',()=>{if(REPLAY)return;REC.ev('n',0,0,mi.value.slice(0,200));setName(mi.value);});
