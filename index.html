@@ -455,6 +455,8 @@ body.mob{background:#f5f6fa;overscroll-behavior:none;touch-action:manipulation}
 .mob .mver{font-size:11px;color:#999;text-align:center;margin:10px 0 0}
 #msel{display:none;position:absolute;z-index:24;opacity:0;margin:0;padding:0;border:0;font-size:16px;-webkit-appearance:none;appearance:none;background:transparent}
 #msel.on{display:block}
+
+.mfi,#msel{touch-action:none}
 </style></head>
 <body class="shell">
 <div id="app">
@@ -654,10 +656,10 @@ function pgCars(St){return hdr(St)+`<div class="vz"><div class="vzh"><h3>Moje vo
 function esc2(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function pgCarF(St){const f=St.form,ed=f.mode==='edit';
  const inp=(lab,k,ro,req,ta)=>`<div class="fl2">${lab}${req?' <span class="rq">*</span>':''}</div><div class="fx${ro?' ro':''}${ta?' ta':''}${f.f===k?' ac':''}${f.err&&k==='spz'?' er':''}" data-k="${ro?'pole-ro':'pole-vozu'}" data-v="${k}">${esc2(f[k])}${f.f===k?'<i class="cu"></i>':''}</div>`+(f.err&&k==='spz'?`<div class="fe">${f.err}</div>`:'');
- const drop=f.drop&&!ed?`<div class="po">${POHON.map((p,i)=>`<div class="${i===f.p?'on':''}" data-k="pohon-volba" data-v="${i}">${p}</div>`).join('')}</div>`:'';
+ const drop=f.drop?`<div class="po">${POHON.map((p,i)=>`<div class="${i===f.p?'on':''}" data-k="pohon-volba" data-v="${i}">${p}</div>`).join('')}</div>`:'';
  return hdr(St)+`<div class="vz vf"><h2>${ed?'Aktualizovat vozidlo:':'Vytvořit vozidlo:'}</h2>${inp('Název automobilu:','n')}${inp('SPZ:','spz',ed,true)}
-<div class="fl2">Pohon:</div><div class="fx sl${ed?' ro':''}" data-k="${ed?'pole-ro':'pohon'}"><span>${POHON[f.p]}</span>${I.dn}</div>${drop}
-${ed?'':`<div class="jak" data-k="jak-pohon">${I.info}<span>Jak vybrat pohon vozidla?</span></div>`}
+<div class="fl2">Pohon:</div><div class="fx sl" data-k="pohon"><span>${POHON[f.p]}</span>${I.dn}</div>${drop}
+<div class="jak" data-k="jak-pohon">${I.info}<span>Jak vybrat pohon vozidla?</span></div>
 <div class="ck2" data-k="vuz-invalida"><i class="${f.inv?'on':''}">${f.inv?'✓':''}</i><span>Vozidlo má invalidní průkaz</span></div>
 ${inp('Délka vozu v mm:','len')}${inp('Šířka vozu v mm:','w')}${inp('Výška vozu v mm:','h')}${inp('Poznámka:','note',false,false,true)}
 <div class="vg" data-k="vuz-form-ulozit">${ed?'Aktualizovat vozidlo':'Přidat vozidlo'}</div></div>`;}
@@ -1422,7 +1424,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x36</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x37</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
@@ -1554,7 +1556,14 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(txtGet()==null)return;
   if(S.scr==='carf'&&S.form&&S.form.f&&!S.sheet){S.form.f=null;paint();}else{MB.kbOff=true;kbSync();}});
  ['#mein','#mta2'].forEach(q=>{const e=$(q);e.addEventListener('focus',()=>{MB.kbOff=false;MB.idle();});e.addEventListener('input',()=>MB.idle());e.addEventListener('keydown',()=>MB.idle());});
- clampScroll=function(){const max=Math.max(0,pgEl.offsetHeight-695+(MB.cover||0));S.scroll=Math.min(max,Math.max(0,S.scroll));};
+ /* tah prstem začatý na poli (input/select) posouvá stránku jako jinde */
+ ['#mein','#mta2','#msel'].forEach(q=>{const e=$(q);let fw=null;
+  e.addEventListener('pointerdown',ev=>{if(REPLAY)return;fw={p:phonePt(ev),on:false,id:ev.pointerId};});
+  e.addEventListener('pointermove',ev=>{if(!fw)return;const [x,y]=phonePt(ev);if(!fw.on){if(Math.abs(y-fw.p[1])<10)return;fw.on=true;try{e.setPointerCapture(fw.id);}catch(_){}pDown(fw.p[0],fw.p[1]);}ev.preventDefault();pMove(x,y);MB.place();});
+  const end=ev=>{if(fw&&fw.on){const [x,y]=phonePt(ev);pUp(x,y);}fw=null;};e.addEventListener('pointerup',end);e.addEventListener('pointercancel',end);});
+ /* při psaní (klávesnice může zakrývat spodek) jde stránku vždy posunout aspoň o 400 px dál */
+ MB.extra=()=>{const a=document.activeElement;return Math.max(MB.cover||0,a&&(a.id==='mein'||a.id==='mta2')?400:0);};
+ clampScroll=function(){const max=Math.max(0,pgEl.offsetHeight-695+MB.extra());S.scroll=Math.min(max,Math.max(0,S.scroll));};
  if(window.visualViewport){visualViewport.addEventListener('resize',()=>MB.layout());visualViewport.addEventListener('scroll',()=>MB.layout());}
  window.addEventListener('resize',()=>MB.layout());
  window.addEventListener('popstate',()=>MB.back());
