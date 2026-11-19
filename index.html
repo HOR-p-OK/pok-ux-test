@@ -545,7 +545,7 @@ const DNS=['Ne','Po','Út','St','Čt','Pá','So'];
 const MON=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
 const TODAY=16, NOWMIN=13*60, LAST=27;            // simulovaný den testu: po 16. 11. 2026, 13:00; rámec 11 dní
 const OCC={16:[[0,780],[780,870]],17:[[360,1035]],18:[[540,660]],19:[[360,1035]],20:[[840,1440]],21:[[600,690]],23:[[420,540]],25:[[720,960]],27:[[1080,1440]]};
-const POHON=['Běžný (benzín/nafta)','Elektrický (včetně hybridů)','LPG a CNG','Hybrid'];
+const POHON=['Běžný (benzín/nafta)','Elektrický + Plug-in hybrid','LPG a CNG'];
 const car0=(spz)=>({n:spz,spz,p:0,inv:false,len:'',w:'',h:'',note:''});
 const vN=(St,i)=>St.cars[i]?St.cars[i].spz:'–';
 const vNm=(St,i)=>St.cars[i]?(St.cars[i].n||St.cars[i].spz):'–';
@@ -663,7 +663,7 @@ function pgCarF(St){const f=St.form,ed=f.mode==='edit';
 <div class="ck2" data-k="vuz-invalida"><i class="${f.inv?'on':''}">${f.inv?'✓':''}</i><span>Vozidlo má invalidní průkaz</span></div>
 ${inp('Délka vozu v mm:','len')}${inp('Šířka vozu v mm:','w')}${inp('Výška vozu v mm:','h')}${inp('Poznámka:','note',false,false,true)}
 <div class="vg" data-k="vuz-form-ulozit">${ed?'Aktualizovat vozidlo':'Přidat vozidlo'}</div></div>`;}
-function sheetPohon(){return `<div class="dim" data-k="pohon-info-zavrit"></div><div class="sh" id="sheet"><div class="hdz"><div class="hd"></div><h3>Jak vybrat pohon vozidla?</h3></div><div class="nt" style="margin-top:6px">Pohon zvolte podle technického průkazu vozidla. Vozidla s pohonem <b>Elektrický (včetně hybridů)</b> mohou využívat místa s nabíječkou.</div><div class="zb" data-k="pohon-info-zavrit">Zavřít</div></div>`;}
+function sheetPohon(){return `<div class="dim" data-k="pohon-info-zavrit"></div><div class="sh" id="sheet"><div class="hdz"><div class="hd"></div><h3>Jak vybrat pohon vozidla?</h3></div><div class="nt" style="margin-top:6px">Pohon zvolte podle technického průkazu vozidla. Vozidla s pohonem <b>Elektrický + Plug-in hybrid</b> mohou využívat místa s nabíječkou.</div><div class="zb" data-k="pohon-info-zavrit">Zavřít</div></div>`;}
 function calH(St){
  const m=St.month,first=new Date(2026,m,1),off=(first.getDay()+6)%7,dim=new Date(2026,m+1,0).getDate(),pdim=new Date(2026,m,0).getDate();
  let h=['Po','Út','St','Čt','Pá','So','Ne'].map(w=>`<div class="wd">${w}</div>`).join('');
@@ -1424,7 +1424,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x51</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x56</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
