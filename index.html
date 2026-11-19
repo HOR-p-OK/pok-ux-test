@@ -545,7 +545,7 @@ const DNS=['Ne','Po','Út','St','Čt','Pá','So'];
 const MON=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
 const TODAY=16, NOWMIN=13*60, LAST=27;            // simulovaný den testu: po 16. 11. 2026, 13:00; rámec 11 dní
 const OCC={16:[[0,780],[780,870]],17:[[360,1035]],18:[[540,660]],19:[[360,1035]],20:[[840,1440]],21:[[600,690]],23:[[420,540]],25:[[720,960]],27:[[1080,1440]]};
-const POHON=['Běžný (benzín/nafta)','Elektromobil (BEV)','Plug-in hybrid (PHEV)','Hybrid (HEV)','LPG a CNG'];
+const POHON=['Běžný (benzín/nafta)','Elektrický (včetně hybridů)','LPG a CNG','Hybrid'];
 const car0=(spz)=>({n:spz,spz,p:0,inv:false,len:'',w:'',h:'',note:''});
 const vN=(St,i)=>St.cars[i]?St.cars[i].spz:'–';
 const vNm=(St,i)=>St.cars[i]?(St.cars[i].n||St.cars[i].spz):'–';
@@ -606,7 +606,7 @@ function gauge(v,size=48,fs=12){const sw=size/13.7,r=size/2-sw/2-1,c=2*Math.PI*r
 /* ==================== STAV ==================== */
 function fresh(variant){return {scr:'home',menu:false,menuRez:false,sheet:null,dlg:null,toast:null,ntf:null,mode:'single',month:10,day:null,r1:null,r2:null,a:null,b:null,
  veh:0,ev:false,vehOpen:false,vehDrop:false,tv:0,tev:false,tpl:[{n:'Ranní směna',a:360,b:840},{n:'Odpolední směna',a:840,b:1320}],
- variant:variant||'B',scroll:0,timerEnd:null,saved:[],popSeen:false,booking:null,bookings:[],calDet:null,calFrom:null,cars:[car0('ELN2102-1'),Object.assign(car0('LPN2102-1'),{p:4,h:'1500'})],defCar:0,form:null};}
+ variant:variant||'B',scroll:0,timerEnd:null,saved:[],popSeen:false,booking:null,bookings:[],calDet:null,calFrom:null,cars:[car0('ELN2102-1'),Object.assign(car0('LPN2102-1'),{p:2,h:'1500'})],defCar:0,form:null};}
 let S=fresh('B');
 
 /* ==================== VYKRESLENÍ OBRAZOVEK ==================== */
@@ -650,7 +650,7 @@ function detH(St){const b=St.bookings[St.calDet];if(!b)return '';
  return `<div class="dim" data-k="detail-mimo"></div><div class="oc od"><div class="ox" data-k="detail-zavrit">${I.xb}</div>${detBody(b)}<div class="obt or" data-k="upravit-rezervaci" data-v="${St.calDet}">Upravit rezervaci</div><div class="obt rd" data-k="uvolnit-rezervaci" data-v="${St.calDet}">Uvolnit rezervaci</div></div>`;}
 /* ---------- vozidla (převzato ze stávajícího rozhraní) ---------- */
 function pgCars(St){return hdr(St)+`<div class="vz"><div class="vzh"><h3>Moje vozy:</h3><div class="vga" data-k="vuz-pridat">+ Přidat vozidlo</div></div>`+St.cars.map((c,i)=>{const d=i===St.defCar;
- return `<div class="vc"><div class="vh"><div>${d?'(Výchozí vozidlo)<br>':''}${esc2(c.n||c.spz)}</div><div>SPZ:<br>${esc2(c.spz)}</div></div><div class="vp"><i>${I.eng}</i><div>Pohon:<b>${POHON[c.p]}</b></div></div>${(c.len||c.w||c.h)?`<div class="vp"><i class="vcar">${I.car2}</i><div>Rozměry v mm (D x Š x V):<b>${c.len||'-'} x ${c.w||'-'} x ${c.h||'-'}</b></div></div>`:''}
+ return `<div class="vc"><div class="vh"><div>${d?'(Výchozí vozidlo)<br>':''}${esc2(c.n||c.spz)}</div><div>SPZ:<br>${esc2(c.spz)}</div></div><div class="vp"><i>${I.eng}</i><div>Pohon:<b>${POHON[c.p]||POHON[0]}</b></div></div>${(c.len||c.w||c.h)?`<div class="vp"><i class="vcar">${I.car2}</i><div>Rozměry v mm (D x Š x V):<b>${c.len||'-'} x ${c.w||'-'} x ${c.h||'-'}</b></div></div>`:''}
 <div class="vb${d?' dis vbgd':' vbg'}" data-k="vuz-vychozi" data-v="${i}">${d?'Výchozí vozidlo':'Nastavit jako výchozí'}</div><div class="vb" data-k="vuz-upravit" data-v="${i}">Upravit vozidlo</div><div class="vb${d?' dis':' vbr'}" data-k="vuz-smazat" data-v="${i}">Smazat vozidlo</div></div>`;}).join('')+
  `<div class="vg" data-k="vuz-pridat">Přidat vozidlo</div><div class="vzz" data-k="vozidla-zavrit">Zavřít</div></div>`;}
 function esc2(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
@@ -658,12 +658,12 @@ function pgCarF(St){const f=St.form,ed=f.mode==='edit';
  const inp=(lab,k,ro,req,ta)=>`<div class="fl2">${lab}${req?' <span class="rq">*</span>':''}</div><div class="fx${ro?' ro':''}${ta?' ta':''}${f.f===k?' ac':''}${f.err&&k==='spz'?' er':''}" data-k="${ro?'pole-ro':'pole-vozu'}" data-v="${k}">${esc2(f[k])}${f.f===k?'<i class="cu"></i>':''}</div>`+(f.err&&k==='spz'?`<div class="fe">${f.err}</div>`:'');
  const drop=f.drop?`<div class="po">${POHON.map((p,i)=>`<div class="${i===f.p?'on':''}" data-k="pohon-volba" data-v="${i}">${p}</div>`).join('')}</div>`:'';
  return hdr(St)+`<div class="vz vf"><h2>${ed?'Aktualizovat vozidlo:':'Vytvořit vozidlo:'}</h2>${inp('Název automobilu:','n')}${inp('SPZ:','spz',ed,true)}
-<div class="fl2">Pohon:</div><div class="fx sl" data-k="pohon"><span>${POHON[f.p]}</span>${I.dn}</div>${drop}
+<div class="fl2">Pohon:</div><div class="fx sl" data-k="pohon"><span>${POHON[f.p]||POHON[0]}</span>${I.dn}</div>${drop}
 <div class="jak" data-k="jak-pohon">${I.info}<span>Jak vybrat pohon vozidla?</span></div>
 <div class="ck2" data-k="vuz-invalida"><i class="${f.inv?'on':''}">${f.inv?'✓':''}</i><span>Vozidlo má invalidní průkaz</span></div>
 ${inp('Délka vozu v mm:','len')}${inp('Šířka vozu v mm:','w')}${inp('Výška vozu v mm:','h')}${inp('Poznámka:','note',false,false,true)}
 <div class="vg" data-k="vuz-form-ulozit">${ed?'Aktualizovat vozidlo':'Přidat vozidlo'}</div></div>`;}
-function sheetPohon(){return `<div class="dim" data-k="pohon-info-zavrit"></div><div class="sh" id="sheet"><div class="hdz"><div class="hd"></div><h3>Jak vybrat pohon vozidla?</h3></div><div class="nt" style="margin-top:6px">Pohon zvolte podle technického průkazu. <b>Elektromobil (BEV)</b> a <b>plug-in hybrid (PHEV)</b> se nabíjejí ze zásuvky a mohou využívat místa s nabíječkou. Klasický <b>hybrid (HEV)</b> se nenabíjí, vyberte pro něj Hybrid.</div><div class="zb" data-k="pohon-info-zavrit">Zavřít</div></div>`;}
+function sheetPohon(){return `<div class="dim" data-k="pohon-info-zavrit"></div><div class="sh" id="sheet"><div class="hdz"><div class="hd"></div><h3>Jak vybrat pohon vozidla?</h3></div><div class="nt" style="margin-top:6px">Pohon zvolte podle technického průkazu vozidla. Vozidla s pohonem <b>Elektrický (včetně hybridů)</b> mohou využívat místa s nabíječkou.</div><div class="zb" data-k="pohon-info-zavrit">Zavřít</div></div>`;}
 function calH(St){
  const m=St.month,first=new Date(2026,m,1),off=(first.getDay()+6)%7,dim=new Date(2026,m+1,0).getDate(),pdim=new Date(2026,m,0).getDate();
  let h=['Po','Út','St','Čt','Pá','So','Ne'].map(w=>`<div class="wd">${w}</div>`).join('');
@@ -1424,7 +1424,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x41</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x46</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
