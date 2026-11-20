@@ -417,6 +417,7 @@ footer p{font-weight:700;font-size:17px;line-height:1.3;margin-top:30px}
 .sh.ev{padding:12px 22px 28px}.sh.ev h3{font-size:23px;margin:6px 0 16px}.sh.ev .nt{font-size:18.5px;line-height:1.55;margin-top:8px}.sh.ev .zb{margin-top:24px;height:56px;font-size:18px}
 .veh{padding:8px 14px;min-height:56px}.veh>span svg{width:38px;height:38px}
 .vdf{font-size:18.5px;font-weight:800;color:#22252a;display:inline-block;margin-bottom:2px}
+.exp{display:flex;align-items:center;gap:10px;margin-top:18px;padding:10px 12px;border:1.5px solid #f2a7ae;border-radius:10px;background:#fdecee;color:#d0283a;font-size:15px;font-weight:600;line-height:1.35}.exp span{flex:1}.exp .ov{flex:0 0 auto;border:1.5px solid #4a62d8;border-radius:8px;background:#fff;color:#4a62d8;padding:9px 12px;font-size:14px;font-weight:600}
 
 /* ===== mobilní režim ===== */
 body.mob{background:#f5f6fa;overscroll-behavior:none;touch-action:manipulation}
@@ -663,7 +664,7 @@ function esc2(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt
 function pgCarF(St){const f=St.form,ed=f.mode==='edit';
  const inp=(lab,k,ro,req,ta)=>`<div class="fl2">${lab}${req?' <span class="rq">*</span>':''}</div><div class="fx${ro?' ro':''}${ta?' ta':''}${f.f===k?' ac':''}${f.err&&k==='spz'?' er':''}" data-k="${ro?'pole-ro':'pole-vozu'}" data-v="${k}">${esc2(f[k])}${f.f===k?'<i class="cu"></i>':''}</div>`+(f.err&&k==='spz'?`<div class="fe">${f.err}</div>`:'');
  const drop=f.drop?`<div class="po">${POHON.map((p,i)=>`<div class="${i===f.p?'on':''}" data-k="pohon-volba" data-v="${i}">${p}</div>`).join('')}</div>`:'';
- return hdr(St)+`<div class="vz vf"><h2>${ed?'Aktualizovat vozidlo:':'Vytvořit vozidlo:'}</h2>${inp('Název automobilu:','n')}${inp('SPZ:','spz',false,true)}
+ return hdr(St)+`<div class="vz vf"><h2>${ed?'Aktualizovat vozidlo:':'Vytvořit vozidlo:'}</h2>${inp('Název automobilu:','n')}${inp('SPZ:','spz',ed,true)}
 <div class="fl2">Pohon:</div><div class="fx sl" data-k="pohon"><span>${POHON[f.p]||POHON[0]}</span>${I.dn}</div>${drop}
 <div class="jak" data-k="jak-pohon">${I.info}<span>Jak vybrat pohon vozidla?</span></div>
 <div class="ck2" data-k="vuz-invalida"><i class="${f.inv?'on':''}">${f.inv?'✓':''}</i><span>Vozidlo má invalidní průkaz</span></div>
@@ -722,7 +723,7 @@ function pgS2m(St){
 <div class="nav"><div class="zp" data-k="zpet">‹ Zpět</div><div class="gb${both?'':' dis'}" data-k="pokracovat">Pokračovat${I.chS}</div></div><div style="height:24px"></div>`;}
 function holdTxt(St,snap){if(snap)return '04:41';const s=Math.max(0,Math.ceil((St.timerEnd-Date.now())/1000));return p2(Math.floor(s/60))+':'+p2(s%60);}
 function pgS3(St,snap){
- const vlast=St.ev?'Nabíječka (EV) ⚡':'Standardní', park='Parking E | Patro -2 | Sekce -2 Budova 24 | Místo 75';
+ const vlast=St.ev?'S nabíječkou (EV) ⚡':'Standardní', park='Parking E | Patro -2 | Sekce -2 Budova 24 | Místo 75';
  let card;
  if(St.mode==='multi'){const n=St.r2-St.r1+1;
   card=`<div class="dt3">${dShort(St.r1)} – ${dShort(St.r2)} 2026</div><div class="tm3" style="font-size:24px">Vícedenní rezervace <small>· ${n} ${cz(n,'den','dny','dní')}</small></div>
@@ -730,8 +731,8 @@ function pgS3(St,snap){
  else{const d=St.b-St.a;card=`<div class="dt3">${dLong(St.day)}</div><div class="tm3">${fmt(St.a)} – ${fmt(St.b)} <small>· ${Math.floor(d/60)} hod ${d%60} min</small></div>`;}
  return hdr(St)+topH(`<span class="wn">!</span><span>Rezervaci potvrďte tlačítkem dole.</span>`,3,'wr','k3')+
  `<div class="box rc">${card}<div class="rw"><span>Vozidlo / SPZ</span><b>${vNm(St,St.veh)} (${vN(St,St.veh)})</b></div><div class="rw"><span>Vlastnosti místa</span><b>${vlast}</b></div><div class="rw"><span>Parkoviště</span><b>${park}</b></div></div>
-<div class="hold">⏱️ Místo pro vás držíme ještě <b id="hold">${holdTxt(St,snap)}</b> min</div>
-<div class="nav"><div class="zp" data-k="zpet">‹ Zpět</div><div class="gb" data-k="potvrdit-rezervaci">Potvrdit rezervaci</div></div><div class="pnote">Po potvrzení se rezervace uloží a zobrazí v kalendáři.</div><div style="height:24px"></div>`;}
+${St.exp&&!snap?'<div class="exp"><span>⏱️ 00:00 Místo už pro vás nedržíme.</span><div class="ov" data-k="overit-znovu">Ověřit znovu</div></div>':`<div class="hold">⏱️ Místo pro vás držíme ještě <b id="hold">${holdTxt(St,snap)}</b> min</div>`}
+<div class="nav"><div class="zp" data-k="zpet">‹ Zpět</div><div class="gb${St.exp&&!snap?' dis':''}" data-k="potvrdit-rezervaci">Potvrdit rezervaci</div></div><div class="pnote">Po potvrzení se rezervace uloží a zobrazí v kalendáři.</div><div style="height:24px"></div>`;}
 function pgOk(St){return hdr(St)+`<div class="done"><div class="ck">${I.ok}</div><h2>Rezervace je uložena</h2><p>${St.booking?bookTxt(St.booking):''}<br>Parking E | Patro -2 | Místo 75</p></div><div class="nav"><div class="gb" data-k="na-uvodni-stranu">Na úvodní stranu</div></div>`;}
 
 /* ---------- spodní okna ---------- */
@@ -815,7 +816,7 @@ function onScreen(){const k=scrKey(S);if(k!==lastKey){lastKey=k;REC.screen(k);}}
 let ntfT=null;function ntf(m,ms){ms=ms||5000;S.ntf={m,t0:Date.now(),ms};clearTimeout(ntfT);ntfT=setTimeout(()=>{S.ntf=null;paintOv();},ms);}
 function toast(m,ms){S.toast=m;clearTimeout(toastT);toastT=setTimeout(()=>{S.toast=null;paintOv();if(typeof RUN!=='undefined')RUN.check();},ms||2200);}
 const OUT='Není součástí tohoto testovacího modulu.';
-function resetFlow(){Object.assign(S,{pd:null,calDet:null,calFrom:null,menu:false,menuRez:false,sheet:null,dlg:null,mode:'single',month:10,day:null,r1:null,r2:null,a:null,b:null,vehOpen:false,vehDrop:false,scroll:0,timerEnd:null});}
+function resetFlow(){Object.assign(S,{pd:null,exp:false,calDet:null,calFrom:null,menu:false,menuRez:false,sheet:null,dlg:null,mode:'single',month:10,day:null,r1:null,r2:null,a:null,b:null,vehOpen:false,vehDrop:false,scroll:0,timerEnd:null});}
 function goS1(route){clearTimeout(pendT);resetFlow();S.veh=S.defCar;S.scr='s1';REC.route(route);}
 function fwdA(from){for(let t=from;t<=1435;t+=5) if(okA(S,t)) return t; for(let t=from;t>=0;t-=5) if(okA(S,t)) return t; return null;}
 function fwdB(from,a){for(let t=from;t<=1440;t+=5) if(okB(S,t,a)) return t; for(let t=from;t>=5;t-=5) if(okB(S,t,a)) return t; return null;}
@@ -937,7 +938,7 @@ function act0(k,v,el){
    if(el&&el.classList.contains('dis')) break;
    if(S.mode==='single'){ clearTimeout(pendT);
      /* dvojí ovládání: do 2 s druhý jiný den → vícedenní úsek; stejný den znovu → jednodenní hned; 2 s nic → jednodenní */
-     if(S.pd!=null&&S.pd!==d){const d0=S.pd;S.pd=null;S.mode='multi';S.day=null;S.r1=Math.min(d0,d);S.r2=Math.max(d0,d);S.a=S.b=null;
+     if(S.pd!=null&&S.pd!==d&&(()=>{for(let x=Math.min(S.pd,d);x<=Math.max(S.pd,d);x++)if(dayState(x,S.month)!=='f')return false;return true;})()){const d0=S.pd;S.pd=null;S.mode='multi';S.day=null;S.r1=Math.min(d0,d);S.r2=Math.max(d0,d);S.a=S.b=null;
        pendT=setTimeout(()=>{if(S.scr==='s1'&&S.mode==='multi'&&S.r2){S.scr='s2';S.scroll=0;paint();}},REPLAY?350/PSPD:350);}
      else if(S.pd===d){S.pd=null;S.scr='s2';S.scroll=0;}
      else {if(S.day!==d){S.day=d;S.a=S.b=null;} S.pd=d; pendT=setTimeout(()=>{if(S.scr==='s1'&&S.pd===d){S.pd=null;S.scr='s2';S.scroll=0;paint();}},REPLAY?2000/PSPD:2000);} }
@@ -970,8 +971,9 @@ function act0(k,v,el){
  case 'ulozit-zrusit': case 'ulozit-mimo': S.sheet=null; break;
  case 'ulozit-sablonu': { const n=sh.name.trim(); if(!n) break; S.tpl.push({n,a:S.a,b:S.b}); S.saved.push(n); S.sheet=null; toast('Šablona „'+n+'“ je uložena.'); REC.goal('ulozeno',{n}); break; }
  case 'zpet': if(S.scr==='s2'){S.scr='s1';S.scroll=0;} else if(S.scr==='s3'){S.scr='s2';S.timerEnd=null;S.scroll=0;} break;
- case 'pokracovat': if(S.a!=null&&S.b!=null){S.scr='s3';S.scroll=0;S.timerEnd=Date.now()+300000;} break;
- case 'potvrdit-rezervaci': { const b=S.mode==='multi'?{mode:'multi',r1:S.r1,r2:S.r2,a:S.a,b:S.b}:{mode:'single',d:S.day,a:S.a,b:S.b}; b.spz=vN(S,S.veh); b.ev=S.ev; S.booking=b; S.bookings.push(b); S.bookings.sort((x,y)=>(x.d||x.r1)-(y.d||y.r1)||x.a-y.a); resetFlow(); S.scr='home'; S.scroll=0; toast('Rezervace je uložena: '+bookTxt(b),4000); REC.goal('booking',b); break; }
+ case 'pokracovat': if(S.a!=null&&S.b!=null){S.exp=false;S.scr='s3';S.scroll=0;S.timerEnd=Date.now()+300000;} break;
+ case 'overit-znovu': S.exp=false; S.timerEnd=Date.now()+300000; break;
+ case 'potvrdit-rezervaci': if(S.exp) break; { const b=S.mode==='multi'?{mode:'multi',r1:S.r1,r2:S.r2,a:S.a,b:S.b}:{mode:'single',d:S.day,a:S.a,b:S.b}; b.spz=vN(S,S.veh); b.ev=S.ev; S.booking=b; S.bookings.push(b); S.bookings.sort((x,y)=>(x.d||x.r1)-(y.d||y.r1)||x.a-y.a); resetFlow(); S.scr='home'; S.scroll=0; toast('Rezervace je uložena: '+bookTxt(b),4000); REC.goal('booking',b); break; }
  case 'na-uvodni-stranu': resetFlow(); S.scr='home'; break;
  case 'vozidla-zavrit': resetFlow(); S.scr='home'; S.scroll=0; break;
  case 'logo': clearTimeout(pendT); resetFlow(); S.scr='home'; break;
@@ -985,7 +987,7 @@ function handleKey0(key){
  if(sh.type==='save'){ if(key==='Backspace') sh.name=sh.name.slice(0,-1); else if(key==='Enter') act('ulozit-sablonu'); else if(key.length===1&&sh.name.length<30) sh.name+=key; else return false; paint(); return true; }
  if(sh.type==='time'&&sh.entry){ if(/^[0-9]$/.test(key)) entryKey(key); else if(key==='Backspace') act('klavesa-smazat'); else if(key==='Enter') act('klavesa-hotovo'); else return false; paint(); return true; }
  return false;}
-setInterval(()=>{ if(S.scr==='s3'&&S.timerEnd&&!S.dlg){const h=document.getElementById('hold'); if(h) h.textContent=holdTxt(S); if(Date.now()>S.timerEnd){S.dlg='expired';paint();}}},500);
+setInterval(()=>{ if(S.scr==='s3'&&S.timerEnd&&!S.dlg){const h=document.getElementById('hold'); if(h) h.textContent=holdTxt(S); if(Date.now()>S.timerEnd&&!S.exp){S.exp=true;paint();}}},500);
 
 /* ==================== MYŠ JAKO PRST ==================== */
 let PSPD=1;
@@ -1379,7 +1381,7 @@ const USR={state:'welcome',free:false,
 
 /* ==================== ANALÝZA TESTŮ (řádky pro XLS i souhrn v administraci) ==================== */
 const ENTRY_K=['hlavni-tlacitko','hl-plus','hl-menu','menu-nova-rezervace','hl-kalendar','zobrazit-kalendar','menu-kalendar','kal-nova-rezervace','vyuziti','menu-vozidla','menu-rezervace'];
-const KNAME={'nabijecka-info':'Vykřičník nabíječky','nabijecka-info-zavrit':'Zavřít (okno nabíječka)','nabijecka-info-mimo':'Mimo okno nabíječka','ntf-zavrit':'Křížek oznámení','vozidla-zavrit':'Zavřít (Vozidla)','nav-zpet':'Systémové Zpět telefonu','sablony-mimo':'Mimo okno šablon','vyuziti-mimo':'Mimo okno využití','detail-mimo':'Mimo detail dne','dialog-mimo':'Mimo dialogové okno','ulozit-mimo':'Mimo okno uložení šablony','logo':'Logo v záhlaví (na úvod)','hlavni-tlacitko':'Hlavní tlačítko Rezervace parkování','hl-plus':'Tlačítko + v záhlaví','hl-menu':'Menu (záhlaví)','menu-rezervace':'Menu › Rezervace','menu-nova-rezervace':'Menu › Nová rezervace','hl-kalendar':'Ikona kalendáře v záhlaví','zobrazit-kalendar':'Zobrazit kalendář (úvodní strana)','menu-kalendar':'Menu › Kalendář','kal-nova-rezervace':'Kalendář › Nová rezervace','vyuziti':'Využití Vašich rezervací','menu-vozidla':'Menu › Vozidla',zpet:'‹ Zpět',pokracovat:'Pokračovat','potvrdit-rezervaci':'Potvrdit rezervaci','na-uvodni-stranu':'Na úvodní stranu','pole-prijezd':'Pole Příjezd','pole-odjezd':'Pole Odjezd','cas-potvrdit':'Potvrdit (čas)','cas-zrusit':'Zrušit (čas)','cas-mimo':'Mimo okno času','cas-tab-prijezd':'Záložka Příjezd','cas-tab-odjezd':'Záložka Odjezd','valec-h':'Váleček hodin','valec-m':'Váleček minut','klavesa':'Klávesnice – číslice','klavesa-hotovo':'Klávesnice – Hotovo','klavesa-smazat':'Klávesnice – smazat','pole-hodiny':'Pole hodin','pole-minuty':'Pole minut','pouzit-cas':'Použít navržený čas','den-dostupny':'Den v kalendáři','prepinac-jednodenni':'Přepínač Jednodenní','prepinac-vicedenni':'Přepínač Vícedenní','mesic-dal':'Další měsíc','mesic-zpet':'Předchozí měsíc','nacist-ze-sablony':'Načíst ze šablony','nova-sablona':'Nová šablona','sablona':'Výběr šablony','sablona-smazat':'Smazat šablonu','sablony-zavrit':'Zavřít šablony','ulozit-sablonu':'Uložit šablonu','nazev-sablony':'Pole Název šablony','vuz-zmenit':'Změnit (vozidlo)','vuz-ulozit':'Uložit volby vozidla','vuz-nabijecka':'Nabíječka (zaškrtnutí)','vyuziti-zavrit':'Zavřít (využití)','k1-krizek':'Křížek v kroku 1','k2-krizek':'Křížek v kroku 2','k3-krizek':'Křížek v kroku 3','dialog-zrusit':'Zrušit rezervaci (dialog)','dialog-pokracovat':'Pokračovat v rezervaci (dialog)','nav-zpet':'Systémové Zpět','kal-detail':'Detail rezervace (kalendář)','detail-zavrit':'Zavřít detail','uvolnit-rezervaci':'Uvolnit rezervaci','vuz-pridat':'Přidat vozidlo','vuz-vychozi':'Výchozí vozidlo','vuz-upravit':'Upravit vozidlo','vuz-smazat':'Smazat vozidlo','vuz-form-ulozit':'Přidat / Aktualizovat vozidlo','pole-vozu':'Pole formuláře vozidla','pohon':'Pohon (rozbalit)','pohon-volba':'Volba pohonu','jak-pohon':'Jak vybrat pohon','logo':'Logo','hl-upozorneni':'Zvonek (upozornění)','url':'Adresní řádek'};
+const KNAME={'overit-znovu':'Ověřit znovu (po vypršení)','nabijecka-info':'Vykřičník nabíječky','nabijecka-info-zavrit':'Zavřít (okno nabíječka)','nabijecka-info-mimo':'Mimo okno nabíječka','ntf-zavrit':'Křížek oznámení','vozidla-zavrit':'Zavřít (Vozidla)','nav-zpet':'Systémové Zpět telefonu','sablony-mimo':'Mimo okno šablon','vyuziti-mimo':'Mimo okno využití','detail-mimo':'Mimo detail dne','dialog-mimo':'Mimo dialogové okno','ulozit-mimo':'Mimo okno uložení šablony','logo':'Logo v záhlaví (na úvod)','hlavni-tlacitko':'Hlavní tlačítko Rezervace parkování','hl-plus':'Tlačítko + v záhlaví','hl-menu':'Menu (záhlaví)','menu-rezervace':'Menu › Rezervace','menu-nova-rezervace':'Menu › Nová rezervace','hl-kalendar':'Ikona kalendáře v záhlaví','zobrazit-kalendar':'Zobrazit kalendář (úvodní strana)','menu-kalendar':'Menu › Kalendář','kal-nova-rezervace':'Kalendář › Nová rezervace','vyuziti':'Využití Vašich rezervací','menu-vozidla':'Menu › Vozidla',zpet:'‹ Zpět',pokracovat:'Pokračovat','potvrdit-rezervaci':'Potvrdit rezervaci','na-uvodni-stranu':'Na úvodní stranu','pole-prijezd':'Pole Příjezd','pole-odjezd':'Pole Odjezd','cas-potvrdit':'Potvrdit (čas)','cas-zrusit':'Zrušit (čas)','cas-mimo':'Mimo okno času','cas-tab-prijezd':'Záložka Příjezd','cas-tab-odjezd':'Záložka Odjezd','valec-h':'Váleček hodin','valec-m':'Váleček minut','klavesa':'Klávesnice – číslice','klavesa-hotovo':'Klávesnice – Hotovo','klavesa-smazat':'Klávesnice – smazat','pole-hodiny':'Pole hodin','pole-minuty':'Pole minut','pouzit-cas':'Použít navržený čas','den-dostupny':'Den v kalendáři','prepinac-jednodenni':'Přepínač Jednodenní','prepinac-vicedenni':'Přepínač Vícedenní','mesic-dal':'Další měsíc','mesic-zpet':'Předchozí měsíc','nacist-ze-sablony':'Načíst ze šablony','nova-sablona':'Nová šablona','sablona':'Výběr šablony','sablona-smazat':'Smazat šablonu','sablony-zavrit':'Zavřít šablony','ulozit-sablonu':'Uložit šablonu','nazev-sablony':'Pole Název šablony','vuz-zmenit':'Změnit (vozidlo)','vuz-ulozit':'Uložit volby vozidla','vuz-nabijecka':'Nabíječka (zaškrtnutí)','vyuziti-zavrit':'Zavřít (využití)','k1-krizek':'Křížek v kroku 1','k2-krizek':'Křížek v kroku 2','k3-krizek':'Křížek v kroku 3','dialog-zrusit':'Zrušit rezervaci (dialog)','dialog-pokracovat':'Pokračovat v rezervaci (dialog)','nav-zpet':'Systémové Zpět','kal-detail':'Detail rezervace (kalendář)','detail-zavrit':'Zavřít detail','uvolnit-rezervaci':'Uvolnit rezervaci','vuz-pridat':'Přidat vozidlo','vuz-vychozi':'Výchozí vozidlo','vuz-upravit':'Upravit vozidlo','vuz-smazat':'Smazat vozidlo','vuz-form-ulozit':'Přidat / Aktualizovat vozidlo','pole-vozu':'Pole formuláře vozidla','pohon':'Pohon (rozbalit)','pohon-volba':'Volba pohonu','jak-pohon':'Jak vybrat pohon','logo':'Logo','hl-upozorneni':'Zvonek (upozornění)','url':'Adresní řádek'};
 function homeHow(s){const t=s.taps.filter(x=>x.t>=s.successT&&x.t<=s.homeT&&x.k).pop();return t?kName(t.k):'';}
 const kName=k=>k?(KNAME[k]||k):'(mimo ovládací prvky)';
 function analyze(s){const st=sStats(s);const taps=s.taps.filter(t=>!t.z);
@@ -1438,7 +1440,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x81</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x86</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
