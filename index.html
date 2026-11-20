@@ -416,6 +416,7 @@ footer p{font-weight:700;font-size:17px;line-height:1.3;margin-top:30px}
 .wn.wk::after{content:'';position:absolute;inset:-12px}
 .sh.ev{padding:12px 22px 28px}.sh.ev h3{font-size:23px;margin:6px 0 16px}.sh.ev .nt{font-size:18.5px;line-height:1.55;margin-top:8px}.sh.ev .zb{margin-top:24px;height:56px;font-size:18px}
 .veh{padding:8px 14px;min-height:56px}.veh>span svg{width:38px;height:38px}
+.vdf{font-size:18.5px;font-weight:800;color:#22252a;display:inline-block;margin-bottom:2px}
 
 /* ===== mobilní režim ===== */
 body.mob{background:#f5f6fa;overscroll-behavior:none;touch-action:manipulation}
@@ -654,8 +655,8 @@ function pgCal(St){let h=hdr(St)+`<div class="kal"><h3>Kalendář</h3><div class
 function detH(St){const b=St.bookings[St.calDet];if(!b)return '';
  return `<div class="dim" data-k="detail-mimo"></div><div class="oc od"><div class="ox" data-k="detail-zavrit">${I.xb}</div>${detBody(b)}<div class="obt or" data-k="upravit-rezervaci" data-v="${St.calDet}">Upravit rezervaci</div><div class="obt rd" data-k="uvolnit-rezervaci" data-v="${St.calDet}">Uvolnit rezervaci</div></div>`;}
 /* ---------- vozidla (převzato ze stávajícího rozhraní) ---------- */
-function pgCars(St){return hdr(St)+`<div class="vz"><div class="vzh"><h3>Moje vozy:</h3><div class="vga" data-k="vuz-pridat">+ Přidat vozidlo</div></div>`+St.cars.map((c,i)=>{const d=i===St.defCar;
- return `<div class="vc"><div class="vh"><div>${d?'(Výchozí vozidlo)<br>':''}${esc2(c.n||c.spz)}</div><div>SPZ:<br>${esc2(c.spz)}</div></div><div class="vp"><i>${I.eng}</i><div>Pohon:<b>${POHON[c.p]||POHON[0]}</b></div></div>${(c.len||c.w||c.h)?`<div class="vp"><i class="vcar">${I.car2}</i><div>Rozměry v mm (D x Š x V):<b>${c.len||'-'} x ${c.w||'-'} x ${c.h||'-'}</b></div></div>`:''}
+function pgCars(St){return hdr(St)+`<div class="vz"><div class="vzh"><h3>Moje vozy:</h3><div class="vga" data-k="vuz-pridat">+ Přidat vozidlo</div></div>`+St.cars.map((c,i)=>[c,i]).sort((x,y)=>(y[1]===St.defCar)-(x[1]===St.defCar)).map(([c,i])=>{const d=i===St.defCar;
+ return `<div class="vc"><div class="vh"><div>${d?'<span class="vdf">(Výchozí vozidlo)</span><br>':''}${esc2(c.n||c.spz)}</div><div>SPZ:<br>${esc2(c.spz)}</div></div><div class="vp"><i>${I.eng}</i><div>Pohon:<b>${POHON[c.p]||POHON[0]}</b></div></div>${(c.len||c.w||c.h)?`<div class="vp"><i class="vcar">${I.car2}</i><div>Rozměry v mm (D x Š x V):<b>${c.len||'-'} x ${c.w||'-'} x ${c.h||'-'}</b></div></div>`:''}
 <div class="vb${d?' dis vbgd':' vbg'}" data-k="vuz-vychozi" data-v="${i}">${d?'Výchozí vozidlo':'Nastavit jako výchozí'}</div><div class="vb" data-k="vuz-upravit" data-v="${i}">Upravit vozidlo</div><div class="vb${d?' dis':' vbr'}" data-k="vuz-smazat" data-v="${i}">Smazat vozidlo</div></div>`;}).join('')+
  `<div class="vg" data-k="vuz-pridat">Přidat vozidlo</div><div class="vzz" data-k="vozidla-zavrit">Zavřít</div></div>`;}
 function esc2(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
@@ -887,7 +888,7 @@ function act0(k,v,el){
  case 'menu-vozidla': if(S.scr==='s1'||S.scr==='s2'||S.scr==='s3'){S.dlg='cancel';S.calFrom='cars';break;} resetFlow(); S.scr='cars'; REC.goal('vozidla'); break;
  case 'menu-prehled-rezervaci': case 'menu-pozvanky': case 'menu-profil': case 'menu-odhlasit':
  case 'hl-upozorneni': case 'kal-pozvanka': case 'upravit-rezervaci': toast(OUT); REC.goal('mimo',{k}); break;
- case 'vuz-vychozi': if(+v!==S.defCar){S.defCar=+v;S.veh=S.defCar;ntf('Vozidlo nastaveno jako výchozí');REC.goal('vychozi',{spz:vN(S,+v),p:S.cars[+v].p});} break;
+ case 'vuz-vychozi': if(+v!==S.defCar){S.defCar=+v;S.veh=S.defCar;ntf('Vozidlo nastaveno jako výchozí');S.scroll=0;REC.goal('vychozi',{spz:vN(S,+v),p:S.cars[+v].p});} break;
  case 'vuz-upravit': {const c=S.cars[+v];S.form=Object.assign({mode:'edit',i:+v,f:null,drop:false,err:null},c);S.scr='carf';S.scroll=0;break;}
  case 'vuz-pridat': S.form=Object.assign({mode:'new',i:null,f:null,drop:false,err:null},car0(''));S.form.n='';S.scr='carf';S.scroll=0;break;
  case 'vuz-smazat': if(+v!==S.defCar) S.dlg={delCar:+v}; break;
@@ -1437,7 +1438,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x76</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x81</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
