@@ -809,8 +809,13 @@ function scrKey(St){
 
 /* ==================== CHOVÁNÍ APLIKACE ==================== */
 let pgEl,ovEl,vpEl,phEl,finger,toastT=null,pendT=null,lastKey=null;
-function paint(){const r=render(S);pgEl.innerHTML=r.pg;ovEl.innerHTML=r.ov;clampScroll();pgEl.style.transform=`translateY(${-S.scroll}px)`;onScreen();kbSync();if(typeof RUN!=='undefined')RUN.check();}
-function paintOv(){ovEl.innerHTML=render(S).ov;}
+function paint(){const r=render(S);pgEl.innerHTML=r.pg;ovEl.innerHTML=r.ov;shApply();clampScroll();pgEl.style.transform=`translateY(${-S.scroll}px)`;onScreen();kbSync();if(typeof RUN!=='undefined')RUN.check();}
+function paintOv(){ovEl.innerHTML=render(S).ov;shApply();}
+/* spodní okno jde posunout prstem nahoru, když jeho spodek zakrývá lišta prohlížeče (Opera, Samsung…); při otevření se samo posune o zakrytou část */
+function shMax(){return (typeof MB!=='undefined'&&MB.extra)?(MB.cover||0)+140:0;}
+function shApply(){const s=document.getElementById('sheet');if(!s||!S.sheet){S.shUp=0;S.shKey=null;return;}
+ const key=S.sheet.type;if(S.shKey!==key){S.shKey=key;const room=Math.max(0,s.offsetTop-110);S.shUp=Math.min(typeof MB!=='undefined'?(MB.cover||0):0,room);}
+ S.shUp=Math.max(0,Math.min(S.shUp||0,shMax()));if(S.shUp)s.style.transform=`translateY(${-S.shUp}px)`;}
 function clampScroll(){const max=Math.max(0,pgEl.offsetHeight-695);S.scroll=Math.min(max,Math.max(0,S.scroll));}
 function onScreen(){const k=scrKey(S);if(k!==lastKey){lastKey=k;REC.screen(k);}}
 /* potvrzení jako v reálném p-OK: zelené oznámení nahoře s křížkem a ubíhajícím pruhem */
@@ -1002,13 +1007,14 @@ function pMove(x,y){showFinger(x,y,!!G);if(!G)return;REC.ev('m',x,y);const dx=x-
  if(!G.moved&&Math.hypot(dx,dy)>8){G.moved=true;const el=G.el;
   if(el&&S.sheet&&S.sheet.type==='time'&&!S.sheet.entry&&el.closest('.col')) {G.mode='wheel';G.w=el.closest('.col').dataset.w;}
   else if(el&&el.closest('#sheet')) G.mode='sheet';
+  else if(S.sheet&&!S.dlg&&document.getElementById('sheet')&&dy<0) G.mode='sheet';
   else if(S.sheet||S.dlg||S.calDet!=null) G.mode='none';
   else if(y>=96&&y<=791) G.mode='scroll'; else G.mode='none';}
  if(!G.moved)return;
  const now=performance.now();
  if(G.mode==='scroll'){S.scroll=G.sc-dy;clampScroll();pgEl.style.transform=`translateY(${-S.scroll}px)`;G.vy=(y-G.ly)/Math.max(1,now-G.lt);G.ly=y;G.lt=now;}
  else if(G.mode==='wheel'){S.sheet.drag={w:G.w,dy:Math.max(-400,Math.min(400,dy))};paintOv();}
- else if(G.mode==='sheet'){const s=document.getElementById('sheet');if(s)s.style.transform=`translateY(${Math.max(0,dy)}px)`;}
+ else if(G.mode==='sheet'){const s=document.getElementById('sheet');const pos=Math.max(-shMax(),dy-(S.shUp||0));if(s)s.style.transform=`translateY(${pos}px)`;}
 }
 function pUp(x,y){REC.ev('u',x,y);showFinger(x,y,false);const g=G;G=null;if(!g)return;
  if(!g.moved){const el=hitEl(x,y);ripple(x,y);const t=el&&el.closest('[data-k]');const k=t?t.dataset.k:null,v=t?t.dataset.v:null;
@@ -1018,7 +1024,8 @@ function pUp(x,y){REC.ev('u',x,y);showFinger(x,y,false);const g=G;G=null;if(!g)r
   return;}
  const dy=y-g.y0;
  if(g.mode==='wheel'){const shift=Math.round(-dy/40);S.sheet.drag=null;if(shift)snapWheel(S.sheet,g.w,shift);REC.gest('valec-'+g.w,shift);paint();}
- else if(g.mode==='sheet'){if(dy>90){REC.gest('stazeni-okna',dy);if(S.sheet&&S.sheet.entry)S.sheet=null;else S.sheet=null;paint();}else{const s=document.getElementById('sheet');if(s)s.style.transform='';}}
+ else if(g.mode==='sheet'){const pos=Math.max(-shMax(),dy-(S.shUp||0));if(pos<=0||dy<0){S.shUp=-Math.min(0,pos);const s=document.getElementById('sheet');if(s)s.style.transform=S.shUp?`translateY(${-S.shUp}px)`:'';REC.gest('posun-okna',Math.round(dy));}
+ else if(pos>90){REC.gest('stazeni-okna',dy);if(S.sheet&&S.sheet.entry)S.sheet=null;else S.sheet=null;paint();}else{S.shUp=0;const s=document.getElementById('sheet');if(s)s.style.transform='';}}
  else if(g.mode==='scroll'){REC.gest('posun',Math.round(dy));}
 }
 function phonePt(e){const r=phEl.getBoundingClientRect();return [(e.clientX-r.left)/scale,(e.clientY-r.top)/scale];}
@@ -1423,7 +1430,8 @@ var MB=window.MB={dict:null,sr:null,listening:false,
  vv(){const v=window.visualViewport;return v?{w:v.width,h:v.height,top:v.offsetTop}:{w:innerWidth,h:innerHeight,top:0};},
  layout(){const st=$('#stage'),bar=$('#mbar'),v=MB.vv();if(!bar)return;const bh=bar.classList.contains('on')?bar.offsetHeight:0;
   st.style.top=v.top+'px';st.style.height=v.h+'px';if(v.h!==MB.lastH){MB.lastH=v.h;MB.wantShift=true;}
-  MB.fullH=Math.max(MB.fullH||0,v.h);if(v.w!==MB.lastW){MB.lastW=v.w;MB.fullH=v.h;}const k=Math.min(v.w/390,(MB.fullH-bh)/695);scale=k;
+  /* bez otevřené klávesnice platí skutečná výška okna (Opera, Samsung aj. mají dole vlastní lištu prohlížeče, která se může objevit až později); s klávesnicí se drží největší výška, aby se telefon nezmenšoval */
+  const kb=!REPLAY&&txtGet()!=null&&!MB.kbOff;MB.fullH=kb?Math.max(MB.fullH||0,v.h):v.h;if(v.w!==MB.lastW){MB.lastW=v.w;MB.fullH=v.h;}const k=Math.min(v.w/390,(MB.fullH-bh)/695);scale=k;
   phEl.style.transform=`translateY(${-96*k}px) scale(${k})`;
   const w=$('#phwrap');w.style.width=390*k+'px';w.style.height=695*k+'px';w.style.top=(bh-(MB.shift||0))+'px';
   /* část telefonu zakrytá klávesnicí → stránku jde posunout o tolik dál, aby byl vidět i její spodek */
@@ -1441,7 +1449,7 @@ var MB=window.MB={dict:null,sr:null,listening:false,
   MB.card(`<img class="mlogo" src="${IMG_BLOGO}" alt="Parking-OK"><p class="ut">${MB.introTxt(n)}</p>
    ${MLIVE?'':'<div class="vnote"><b>Zkušební verze:</b> výsledky se zatím nikam neodesílají.</div>'}
    <label class="ml">Vaše jméno</label><input type="text" id="mname" maxlength="40" placeholder="Jakékoliv jméno nebo přezdívka" value="${esc(USR.name||'')}" autocomplete="off">
-   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x86</p>`,()=>{
+   <button class="btn4${USR.name&&USR.name.trim()?'':' off'}" id="mstart">Spustit test</button><p class="mver">verze 26-11-19x91</p>`,()=>{
    const i=$('#mname'),b=$('#mstart');i.oninput=()=>{USR.name=i.value;b.classList.toggle('off',!i.value.trim());};
    i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();i.blur();}};
    b.onclick=()=>{if(!i.value.trim()){i.focus();return;}i.blur();MB.arm();RUN.start(i.value.trim());};});},
@@ -1579,7 +1587,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   e.addEventListener('pointermove',ev=>{if(!fw)return;const [x,y]=phonePt(ev);if(!fw.on){if(Math.abs(y-fw.p[1])<10)return;fw.on=true;try{e.setPointerCapture(fw.id);}catch(_){}pDown(fw.p[0],fw.p[1]);}ev.preventDefault();pMove(x,y);MB.place();});
   const end=ev=>{if(fw&&fw.on){const [x,y]=phonePt(ev);pUp(x,y);}fw=null;};e.addEventListener('pointerup',end);e.addEventListener('pointercancel',end);});
  /* při psaní (klávesnice může zakrývat spodek) jde stránku vždy posunout aspoň o 400 px dál */
- MB.extra=()=>{const a=document.activeElement;return Math.max(MB.cover||0,a&&(a.id==='mein'||a.id==='mta2')?400:0);};
+ MB.extra=()=>{const a=document.activeElement;return Math.max((MB.cover||0)+80,a&&(a.id==='mein'||a.id==='mta2')?400:0);};
  clampScroll=function(){const max=Math.max(0,pgEl.offsetHeight-695+MB.extra());S.scroll=Math.min(max,Math.max(0,S.scroll));};
  if(window.visualViewport){visualViewport.addEventListener('resize',()=>MB.layout());visualViewport.addEventListener('scroll',()=>MB.layout());}
  window.addEventListener('resize',()=>MB.layout());
